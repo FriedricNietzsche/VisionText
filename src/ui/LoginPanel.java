@@ -1,20 +1,20 @@
-package app;
+package ui;
 
-import domain.UserManager;
+import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class LoginPanel extends JPanel {
     private MainAppUI mainApp;
-    private UserManager userManager;
+    private LoginService loginService;
     private ErrorHandler errorHandler;
     private JTextField usernameField;
     private JPasswordField passwordField;
 
-    public LoginPanel(MainAppUI mainApp, UserManager userManager, ErrorHandler errorHandler) {
+    public LoginPanel(MainAppUI mainApp, LoginService loginService, ErrorHandler errorHandler) {
         this.mainApp = mainApp;
-        this.userManager = userManager;
+        this.loginService = loginService;
         this.errorHandler = errorHandler;
         initUI();
     }
@@ -52,7 +52,7 @@ public class LoginPanel extends JPanel {
             errorHandler.showError("Please enter both username and password.");
             return;
         }
-        boolean success = userManager.login(username, password);
+        boolean success = loginService.login(username, password);
         if (success) {
             mainApp.showDashboard(username);
         } else {
@@ -67,7 +67,7 @@ public class LoginPanel extends JPanel {
             errorHandler.showError("Please enter both username and password.");
             return;
         }
-        boolean success = userManager.register(username, password);
+        boolean success = loginService.register(username, password);
         if (success) {
             mainApp.showDashboard(username);
         } else {

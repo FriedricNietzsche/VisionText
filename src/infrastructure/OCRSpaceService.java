@@ -1,18 +1,20 @@
-package domain;
+package infrastructure;
 
+import domain.port.OCRProcessor;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import okhttp3.*;
-import util.Config;
+import shared.Config;
 import java.io.File;
 import java.io.IOException;
 
-public class OCRService {
+public class OCRSpaceService implements OCRProcessor {
     private static final String OCR_URL = "https://api.ocr.space/parse/image";
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
 
+    @Override
     public String extractTextFromImage(File imageFile) throws Exception {
         String apiKey = Config.getOcrApiKey();
         if (apiKey == null || apiKey.isEmpty()) {

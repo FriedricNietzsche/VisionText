@@ -1,9 +1,8 @@
-package app;
+package ui;
 
-import domain.OCRService;
-import domain.HistoryManager;
-import domain.UserManager;
-
+import application.OCRUseCase;
+import application.HistoryService;
+import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,9 +11,9 @@ import java.util.Date;
 
 public class DashboardPanel extends JPanel {
     private MainAppUI mainApp;
-    private OCRService ocrService;
-    private HistoryManager historyManager;
-    private UserManager userManager;
+    private OCRUseCase ocrUseCase;
+    private HistoryService historyService;
+    private LoginService loginService;
     private ErrorHandler errorHandler;
     private String username;
 
@@ -22,11 +21,11 @@ public class DashboardPanel extends JPanel {
     private JLabel imageLabel;
     private File currentImageFile;
 
-    public DashboardPanel(MainAppUI mainApp, OCRService ocrService, HistoryManager historyManager, UserManager userManager, ErrorHandler errorHandler, String username) {
+    public DashboardPanel(MainAppUI mainApp, OCRUseCase ocrUseCase, HistoryService historyService, LoginService loginService, ErrorHandler errorHandler, String username) {
         this.mainApp = mainApp;
-        this.ocrService = ocrService;
-        this.historyManager = historyManager;
-        this.userManager = userManager;
+        this.ocrUseCase = ocrUseCase;
+        this.historyService = historyService;
+        this.loginService = loginService;
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
@@ -58,7 +57,7 @@ public class DashboardPanel extends JPanel {
         saveBtn.addActionListener(this::onSave);
         historyBtn.addActionListener(e -> mainApp.showHistory(username));
         logoutBtn.addActionListener(e -> {
-            userManager.logout();
+            loginService.logout();
             mainApp.showLoginScreen();
         });
     }
@@ -70,7 +69,7 @@ public class DashboardPanel extends JPanel {
             currentImageFile = chooser.getSelectedFile();
             imageLabel.setText("Selected: " + currentImageFile.getName());
             try {
-                String extracted = ocrService.extractTextFromImage(currentImageFile);
+                String extracted = ocrUseCase.extractText(currentImageFile);
                 textArea.setText(extracted);
             } catch (Exception ex) {
                 errorHandler.showError("OCR failed: " + ex.getMessage(), ex);
@@ -98,7 +97,7 @@ public class DashboardPanel extends JPanel {
         }
         // Save to history
         if (currentImageFile != null) {
-            historyManager.saveHistory(username, currentImageFile.getName(), text, new Date().getTime());
+            historyService.saveHistory(username, currentImageFile.getName(), text, new Date().getTime());
         }
     }
 } 

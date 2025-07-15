@@ -1,8 +1,7 @@
-package app;
+package ui;
 
-import domain.HistoryManager;
-import domain.UserManager;
-
+import application.HistoryService;
+import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -10,17 +9,17 @@ import java.util.List;
 
 public class HistoryPanel extends JPanel {
     private MainAppUI mainApp;
-    private HistoryManager historyManager;
-    private UserManager userManager;
+    private HistoryService historyService;
+    private LoginService loginService;
     private ErrorHandler errorHandler;
     private String username;
     private JList<String> historyList;
     private DefaultListModel<String> listModel;
 
-    public HistoryPanel(MainAppUI mainApp, HistoryManager historyManager, UserManager userManager, ErrorHandler errorHandler, String username) {
+    public HistoryPanel(MainAppUI mainApp, HistoryService historyService, LoginService loginService, ErrorHandler errorHandler, String username) {
         this.mainApp = mainApp;
-        this.historyManager = historyManager;
-        this.userManager = userManager;
+        this.historyService = historyService;
+        this.loginService = loginService;
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
@@ -50,7 +49,7 @@ public class HistoryPanel extends JPanel {
 
     private void loadHistory() {
         listModel.clear();
-        List<String> items = historyManager.getHistoryList(username);
+        List<String> items = historyService.getHistoryList(username);
         if (items != null) {
             for (String item : items) {
                 listModel.addElement(item);
@@ -64,7 +63,7 @@ public class HistoryPanel extends JPanel {
             errorHandler.showError("Select a history item to view.");
             return;
         }
-        String text = historyManager.getHistoryItem(username, selected);
+        String text = historyService.getHistoryItem(username, selected);
         JTextArea area = new JTextArea(text, 20, 60);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
@@ -79,7 +78,7 @@ public class HistoryPanel extends JPanel {
             errorHandler.showError("Select a history item to download.");
             return;
         }
-        String text = historyManager.getHistoryItem(username, selected);
+        String text = historyService.getHistoryItem(username, selected);
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new java.io.File("history_item.txt"));
         int result = chooser.showSaveDialog(this);
