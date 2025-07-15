@@ -1,4 +1,4 @@
-package util;
+package shared;
 
 import okhttp3.*;
 import java.io.IOException;
