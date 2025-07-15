@@ -27,3 +27,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Java/Maven
+/target/
+.idea/
+config.properties
