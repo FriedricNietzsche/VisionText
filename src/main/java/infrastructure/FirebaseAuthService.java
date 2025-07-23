@@ -11,7 +11,7 @@ import java.io.IOException;
 public class FirebaseAuthService implements AuthService {
 
     // IMPORTANT: Replace with your actual Firebase Web API Key
-    private static final String FIREBASE_API_KEY = "AIzaSyCSXaDGCtEx3bdqRR2Zd30SBTDwLUqqBq0"; // <<< REMEMBER TO REPLACE THIS
+    private static final String FIREBASE_API_KEY = "AIzaSyCSXaDGCtEx3bdqRR2Zd30SBTDwLUqqBq0";
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
