@@ -22,7 +22,7 @@ public class Config {
     }
 
     public static String getOcrApiKey() {
-        return get("ocr.api.key");
+        return "K84242633888957";
     }
 
     public static String getFirebaseApiKey() {
