@@ -24,7 +24,7 @@ public class LoginPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.gridx = 0; gbc.gridy = 0;
-        add(new JLabel("Username:"), gbc);
+        add(new JLabel("Email:"), gbc);
         gbc.gridx = 1;
         usernameField = new JTextField(20);
         add(usernameField, gbc);
