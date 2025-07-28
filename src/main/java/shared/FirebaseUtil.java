@@ -11,6 +11,7 @@ public class FirebaseUtil {
         Request request = new Request.Builder().url(url).post(body).build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            assert response.body() != null;
             return response.body().string();
         }
     }
@@ -19,6 +20,7 @@ public class FirebaseUtil {
         Request request = new Request.Builder().url(url).get().build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            assert response.body() != null;
             return response.body().string();
         }
     }

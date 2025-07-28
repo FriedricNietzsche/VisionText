@@ -1,6 +1,8 @@
 package application;
 
 import domain.port.HistoryRepository;
+
+import java.io.IOException;
 import java.util.List;
 
 public class HistoryService {
@@ -10,7 +12,7 @@ public class HistoryService {
         this.historyRepository = historyRepository;
     }
 
-    public void saveHistory(String username, String imageFilename, String textContent, long timestamp) {
+    public void saveHistory(String username, String imageFilename, String textContent, long timestamp) throws IOException {
         historyRepository.saveHistory(username, imageFilename, textContent, timestamp);
     }
 
@@ -18,7 +20,7 @@ public class HistoryService {
         return historyRepository.getHistoryList(username);
     }
 
-    public String getHistoryItem(String username, String historyId) {
+    public String getHistoryItem(String username, String historyId) throws IOException {
         return historyRepository.getHistoryItem(username, historyId);
     }
 }

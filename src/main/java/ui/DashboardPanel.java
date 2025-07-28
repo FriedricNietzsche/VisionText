@@ -97,7 +97,11 @@ public class DashboardPanel extends JPanel {
         }
         // Save to history
         if (currentImageFile != null) {
-            historyService.saveHistory(username, currentImageFile.getName(), text, new Date().getTime());
+            try {
+                historyService.saveHistory(username, currentImageFile.getName(), text, new Date().getTime());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 } 
