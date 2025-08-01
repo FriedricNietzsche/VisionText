@@ -5,6 +5,7 @@ import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.util.List;
 
 public class HistoryPanel extends JPanel {
@@ -33,7 +34,7 @@ public class HistoryPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
         JButton viewBtn = new JButton("View");
         JButton downloadBtn = new JButton("Download");
-        JButton backBtn = new JButton("Back");
+        JButton backBtn = new JButton("Back to Dashboard");
         JPanel btnPanel = new JPanel();
         btnPanel.add(viewBtn);
         btnPanel.add(downloadBtn);
@@ -42,28 +43,48 @@ public class HistoryPanel extends JPanel {
 
         viewBtn.addActionListener(this::onView);
         downloadBtn.addActionListener(this::onDownload);
-        backBtn.addActionListener(e -> mainApp.showDashboard(username));
-
+        backBtn.addActionListener(e -> {
+            String currentUser = mainApp.getCurrentUser();
+            mainApp.showDashboard(currentUser);
+        });
         loadHistory();
     }
 
-    private void loadHistory() {
+    public void loadHistory() {
         listModel.clear();
         List<String> items = historyService.getHistoryList(username);
         if (items != null) {
             for (String item : items) {
-                listModel.addElement(item);
+                // Extract display part from "firebaseKey|||displayString" format
+                String displayText = item;
+                if (item.contains("|||")) {
+                    displayText = item.split("\\|\\|\\|")[1];
+                }
+                listModel.addElement(displayText);
             }
         }
     }
 
     private void onView(ActionEvent e) {
-        String selected = historyList.getSelectedValue();
-        if (selected == null) {
+        String selectedDisplay = historyList.getSelectedValue();
+        if (selectedDisplay == null) {
             errorHandler.showError("Select a history item to view.");
             return;
         }
-        String text = historyService.getHistoryItem(username, selected);
+
+        // Find the original item (with Firebase key) that matches the selected display text
+        String originalItem = findOriginalItemByDisplay(selectedDisplay);
+        if (originalItem == null) {
+            errorHandler.showError("Could not find the selected history item.");
+            return;
+        }
+
+        String text = null;
+        try {
+            text = historyService.getHistoryItem(username, originalItem);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         JTextArea area = new JTextArea(text, 20, 60);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
@@ -72,13 +93,27 @@ public class HistoryPanel extends JPanel {
         JOptionPane.showMessageDialog(this, scrollPane, "History Item", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void onDownload(ActionEvent e) {
-        String selected = historyList.getSelectedValue();
-        if (selected == null) {
+    private void onDownload(ActionEvent e)  {
+        String selectedDisplay = historyList.getSelectedValue();
+        if (selectedDisplay == null) {
             errorHandler.showError("Select a history item to download.");
             return;
         }
-        String text = historyService.getHistoryItem(username, selected);
+
+        // Find the original item (with Firebase key) that matches the selected display text
+        String originalItem = findOriginalItemByDisplay(selectedDisplay);
+        if (originalItem == null) {
+            errorHandler.showError("Could not find the selected history item.");
+            return;
+        }
+
+        String text = null;
+        try {
+            text = historyService.getHistoryItem(username, originalItem);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new java.io.File("history_item.txt"));
         int result = chooser.showSaveDialog(this);
@@ -91,4 +126,21 @@ public class HistoryPanel extends JPanel {
             }
         }
     }
-} 
+
+    private String findOriginalItemByDisplay(String displayText) {
+        List<String> allItems = historyService.getHistoryList(username);
+        if (allItems != null) {
+            for (String item : allItems) {
+                if (item.contains("|||")) {
+                    String itemDisplay = item.split("\\|\\|\\|")[1];
+                    if (itemDisplay.equals(displayText)) {
+                        return item;
+                    }
+                } else if (item.equals(displayText)) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+}

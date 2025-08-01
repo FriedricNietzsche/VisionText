@@ -11,11 +11,17 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainAppUI {
+    private CardLayout cardLayout;
+    private JPanel mainPanel;
+    private LoginPanel loginPanel;
+    private DashboardPanel dashboardPanel;
+    private HistoryPanel historyPanel;
     private JFrame frame;
-    private LoginService loginService;
-    private OCRUseCase ocrUseCase;
-    private HistoryService historyService;
-    private ErrorHandler errorHandler;
+    private final LoginService loginService;
+    private final OCRUseCase ocrUseCase;
+    private final HistoryService historyService;
+    private final ErrorHandler errorHandler;
+    private String username ;
 
     public MainAppUI() {
         Config.load();
@@ -32,30 +38,58 @@ public class MainAppUI {
     }
 
     private void initUI() {
+        String LOG_IN = "login";
         frame = new JFrame("VisionText - OCR App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-        frame.setLocationRelativeTo(null);
-        showLoginScreen();
+        //The size is now adjustable
+        frame.setPreferredSize(new Dimension(800, 600));
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+        // Initialize panels
+        loginPanel = new LoginPanel(this,loginService,errorHandler);
+        // Don't create dashboardPanel here - create it when user logs in
+
+        // Add panels to card layout
+        mainPanel.add(loginPanel, LOG_IN);
+        frame.add(mainPanel);
+        cardLayout.show(mainPanel, LOG_IN);
         frame.setVisible(true);
+        frame.pack();
+        frame.repaint();
     }
 
     public void showLoginScreen() {
-        frame.setContentPane(new LoginPanel(this, loginService, errorHandler));
-        frame.revalidate();
+        String LOG_IN = "login";
+        loginPanel = new LoginPanel(this,loginService,errorHandler);
+        mainPanel.remove(loginPanel);
+        mainPanel.add(loginPanel,LOG_IN);
+        cardLayout.show(mainPanel,LOG_IN);
+        frame.setTitle("VisionText - OCR App");
+        frame.pack();
+        frame.repaint();
+
     }
 
     public void showDashboard(String username) {
-        frame.setContentPane(new DashboardPanel(this, ocrUseCase, historyService, loginService, errorHandler, username));
-        frame.revalidate();
+        String DASHBOARD = "dashboard";
+        this.username = username;
+        dashboardPanel = new DashboardPanel(this,ocrUseCase,historyService,loginService,errorHandler,username);
+        mainPanel.remove(dashboardPanel);
+        mainPanel.add(dashboardPanel,DASHBOARD);
+        cardLayout.show(mainPanel, DASHBOARD);
+        frame.setTitle("VisionText  Welcome" +" " + username);
     }
 
     public void showHistory(String username) {
-        frame.setContentPane(new HistoryPanel(this, historyService, loginService, errorHandler, username));
-        frame.revalidate();
+        historyPanel = new HistoryPanel(this,historyService,loginService,errorHandler,username);
+        cardLayout.show(mainPanel, "history");
+        frame.setTitle("VisionText - History");
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(MainAppUI::new);
     }
-} 
+
+    public String getCurrentUser() {
+        return this.username;
+    }
+}
