@@ -7,6 +7,7 @@ import java.util.Properties;
 public class Config {
     private static Properties props = new Properties();
 
+
     public static void load() {
         try (FileInputStream fis = new FileInputStream("config.properties")) {
             props.load(fis);
@@ -22,14 +23,21 @@ public class Config {
     }
 
     public static String getOcrApiKey() {
+
         return "K84242633888957";
     }
 
     public static String getFirebaseApiKey() {
+
         return get("firebase.api.key");
     }
 
     public static String getFirebaseProjectId() {
+
         return get("firebase.project.id");
     }
-} 
+    public static String getFirebaseRealTmeDBURL() {
+        return  "https://" + getFirebaseProjectId() + "-default-rtdb.firebaseio.com/";
+    }
+
+}

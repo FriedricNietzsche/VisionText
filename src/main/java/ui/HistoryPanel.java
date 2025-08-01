@@ -5,6 +5,7 @@ import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.util.List;
 
 public class HistoryPanel extends JPanel {
@@ -65,7 +66,12 @@ public class HistoryPanel extends JPanel {
             errorHandler.showError("Select a history item to view.");
             return;
         }
-        String text = historyService.getHistoryItem(username, selected);
+        String text = null;
+        try {
+            text = historyService.getHistoryItem(username, selected);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         JTextArea area = new JTextArea(text, 20, 60);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
@@ -74,13 +80,18 @@ public class HistoryPanel extends JPanel {
         JOptionPane.showMessageDialog(this, scrollPane, "History Item", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void onDownload(ActionEvent e) {
+    private void onDownload(ActionEvent e)  {
         String selected = historyList.getSelectedValue();
         if (selected == null) {
             errorHandler.showError("Select a history item to download.");
             return;
         }
-        String text = historyService.getHistoryItem(username, selected);
+        String text = null;
+        try {
+            text = historyService.getHistoryItem(username, selected);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         JFileChooser chooser = new JFileChooser();
         chooser.setSelectedFile(new java.io.File("history_item.txt"));
         int result = chooser.showSaveDialog(this);
