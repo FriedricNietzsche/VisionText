@@ -102,7 +102,11 @@ public class FirebaseHistoryRepository implements HistoryRepository {
                 JsonObject item = entry.getValue().getAsJsonObject();
                 String filename = item.has("filename") ? item.get("filename").getAsString() : "unknown";
                 String timestamp = item.has("timestamp") ? item.get("timestamp").getAsString() : "unknown";
-                historyList.add(filename + " (" + timestamp + ")");
+                // Store the Firebase key with the display string, separated by a delimiter
+                String firebaseKey = entry.getKey();
+                String displayString = filename + " (" + timestamp + ")";
+                // Format: "firebaseKey|||displayString" - using ||| as delimiter since it's unlikely to appear in filenames
+                historyList.add(firebaseKey + "|||" + displayString);
             }
         } catch (Exception e) {
             System.err.println("Error fetching history: " + e.getMessage());
@@ -121,8 +125,14 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             throw new IllegalArgumentException("History ID cannot be null or empty");
         }
 
+        // Extract the actual Firebase key from the composite string
+        String actualKey = historyId;
+        if (historyId.contains("|||")) {
+            actualKey = historyId.split("\\|\\|\\|")[0];
+        }
+
         String encodedUsername = encodeUsername(username);
-        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + historyId + ".json";
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
         try {
             String jsonResponse = get(url);
             if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
