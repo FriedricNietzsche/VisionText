@@ -9,10 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static shared.Config.get;
 import static shared.Config.getFirebaseRealTmeDBURL;
 import static shared.FirebaseUtil.post;
-
+import static shared.FirebaseUtil.get;
 
 public class FirebaseHistoryRepository implements HistoryRepository {
     private final Gson gson;
@@ -22,6 +21,14 @@ public class FirebaseHistoryRepository implements HistoryRepository {
         this.gson = new Gson();
     }
 
+    private String encodeUsername(String username) {
+        // Handle null username
+        if (username == null) {
+            return null;
+        }
+        // Replace @ and . with safe characters for Firebase keys
+        return username.replace("@", "_AT_").replace(".", "_DOT_");
+    }
 
     @Override
     public void saveHistory(String username, String imageFilename, String textContent, long timestamp) throws IOException {
@@ -36,127 +43,100 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             throw new IllegalArgumentException("Text content cannot be null");
         }
 
-        // Construct Firestore document URL with auto-generated ID
-        String url = FIREBASE_URL + "/users/" + username + "/history?documentId=auto";
+        // Encode username to handle special characters and fix URL construction
+        String encodedUsername = encodeUsername(username);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history.json";
 
         try {
-            // Create the document structure according to Firestore REST API
-            Map<String, Object> documentFields = new LinkedHashMap<>();
-            documentFields.put("filename", Map.of("stringValue", imageFilename));
-            documentFields.put("content", Map.of("stringValue", textContent));
-            documentFields.put("timestamp", Map.of("integerValue", timestamp));
+            // Create the data structure for Realtime DB (plain JSON, not Firestore format)
+            Map<String, Object> historyItem = new LinkedHashMap<>();
+            historyItem.put("filename", imageFilename);
+            historyItem.put("content", textContent);
+            historyItem.put("timestamp", timestamp);
 
-            // Create the full document structure
-            Map<String, Object> requestBody = Map.of(
-                    "fields", documentFields
-            );
+            String jsonPayload = gson.toJson(historyItem);
 
-            // Convert to JSON
-            assert gson != null;
-            String jsonPayload = gson.toJson(requestBody);
-
-            // Make the POST request
+            // POST to the .json endpoint to auto-generate a key
             String response = post(url, jsonPayload);
 
-            // Verify successful creation
-            if (response.isEmpty()) {
-                throw new IOException("Empty response from Firestore");
+            if (response == null || response.isEmpty()) {
+                throw new IOException("Empty response from Firebase");
             }
-
-            // Optional: Parse response to verify success
+            // Optionally, parse response to check for name (the new key)
             JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
             if (!jsonResponse.has("name")) {
                 throw new IOException("Failed to save history: " + response);
             }
-
         } catch (JsonSyntaxException e) {
-            throw new IOException("Failed to parse Firestore response", e);
+            throw new IOException("Failed to parse Firebase response", e);
         } catch (Exception e) {
             throw new IOException("Failed to save history", e);
         }
     }
+
     @Override
     public List<String> getHistoryList(String username) {
-        String url = FIREBASE_URL + "/users/" + username + "/history/documents";
+        // Handle null username early
+        if (username == null || username.isEmpty()) {
+            System.err.println("Username is null or empty, returning empty history list");
+            return new ArrayList<>();
+        }
+
+        String encodedUsername = encodeUsername(username);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history.json";
         List<String> historyList = new ArrayList<>();
 
         try {
             String jsonResponse = get(url);
 
-            // Add null/empty check for the response
-            if (jsonResponse == null || jsonResponse.isEmpty()) {
+            if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
                 throw new RuntimeException("Empty response from Firebase");
             }
 
             JsonObject response = gson.fromJson(jsonResponse, JsonObject.class);
-
-            // Check if response is null after parsing
             if (response == null) {
                 throw new RuntimeException("Failed to parse Firebase response");
             }
 
-            if (response.has("documents")) {
-                JsonArray documents = response.getAsJsonArray("documents");
-
-                for (JsonElement docElement : documents) {
-                    JsonObject document = docElement.getAsJsonObject();
-                    JsonObject fields = document.getAsJsonObject("fields");
-
-                    String filename = fields.getAsJsonObject("filename")
-                            .get("stringValue").getAsString();
-
-                    String timestamp = "unknown";
-                    if (fields.has("timestamp")) {
-                        JsonObject timestampObj = fields.getAsJsonObject("timestamp");
-                        if (timestampObj.has("integerValue")) {
-                            timestamp = timestampObj.get("integerValue").getAsString();
-                        } else if (timestampObj.has("timestampValue")) {
-                            timestamp = timestampObj.get("timestampValue").getAsString();
-                        }
-                    }
-
-                    historyList.add(filename + " (" + timestamp + ")");
-                }
+            for (Map.Entry<String, JsonElement> entry : response.entrySet()) {
+                JsonObject item = entry.getValue().getAsJsonObject();
+                String filename = item.has("filename") ? item.get("filename").getAsString() : "unknown";
+                String timestamp = item.has("timestamp") ? item.get("timestamp").getAsString() : "unknown";
+                historyList.add(filename + " (" + timestamp + ")");
             }
         } catch (Exception e) {
-            // Log the error and return empty list
             System.err.println("Error fetching history: " + e.getMessage());
             e.printStackTrace();
         }
-
         return historyList;
     }
 
     @Override
     public String getHistoryItem(String username, String historyId) throws IOException {
-        String url = FIREBASE_URL + "/users/" + username + "/history/" + historyId;
+        // Handle null username
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        if (historyId == null || historyId.isEmpty()) {
+            throw new IllegalArgumentException("History ID cannot be null or empty");
+        }
 
+        String encodedUsername = encodeUsername(username);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + historyId + ".json";
         try {
             String jsonResponse = get(url);
-            assert gson != null;
-            JsonObject historyDoc = gson.fromJson(jsonResponse, JsonObject.class);
-
-            // Safely navigate the JSON structure
-            if (!historyDoc.has("fields")) {
+            if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
                 return null;
             }
-
-            JsonObject fields = historyDoc.getAsJsonObject("fields");
-            if (!fields.has("content")) {
+            JsonObject item = gson.fromJson(jsonResponse, JsonObject.class);
+            if (item == null || !item.has("content")) {
                 return null;
             }
-
-            JsonObject contentField = fields.getAsJsonObject("content");
-            if (!contentField.has("stringValue")) {
-                return null;
-            }
-
-            return contentField.get("stringValue").getAsString();
-
+            return item.get("content").getAsString();
         } catch (JsonSyntaxException e) {
             throw new IOException("Failed to parse history item JSON", e);
         } catch (IllegalStateException e) {
             throw new IOException("Invalid history item data structure", e);
         }
     }
-} 
+}

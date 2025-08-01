@@ -39,7 +39,6 @@ public class MainAppUI {
 
     private void initUI() {
         String LOG_IN = "login";
-        String DASHBOARD = "dashboard";
         frame = new JFrame("VisionText - OCR App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //The size is now adjustable
@@ -48,17 +47,15 @@ public class MainAppUI {
         mainPanel = new JPanel(cardLayout);
         // Initialize panels
         loginPanel = new LoginPanel(this,loginService,errorHandler);
-        dashboardPanel = new DashboardPanel(this,ocrUseCase,historyService,loginService,errorHandler,username);
-        historyPanel = new HistoryPanel(this,historyService,loginService,errorHandler,username);
+        // Don't create dashboardPanel here - create it when user logs in
 
-        //card panels to card layout
-        mainPanel.add(loginPanel,LOG_IN);
-        mainPanel.add(dashboardPanel,DASHBOARD);
-        mainPanel.add(historyPanel,"history");
+        // Add panels to card layout
+        mainPanel.add(loginPanel, LOG_IN);
         frame.add(mainPanel);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
+        cardLayout.show(mainPanel, LOG_IN);
         frame.setVisible(true);
+        frame.pack();
+        frame.repaint();
     }
 
     public void showLoginScreen() {

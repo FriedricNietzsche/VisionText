@@ -34,7 +34,7 @@ public class Config {
 
     public static String getFirebaseProjectId() {
 
-        return get("firebase.project.id");
+        return "visiontext-aa6b0";
     }
     public static String getFirebaseRealTmeDBURL() {
         return  "https://" + getFirebaseProjectId() + "-default-rtdb.firebaseio.com/";
