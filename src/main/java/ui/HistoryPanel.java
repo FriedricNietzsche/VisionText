@@ -33,7 +33,7 @@ public class HistoryPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
         JButton viewBtn = new JButton("View");
         JButton downloadBtn = new JButton("Download");
-        JButton backBtn = new JButton("Back");
+        JButton backBtn = new JButton("Back to Dashboard");
         JPanel btnPanel = new JPanel();
         btnPanel.add(viewBtn);
         btnPanel.add(downloadBtn);
@@ -42,12 +42,14 @@ public class HistoryPanel extends JPanel {
 
         viewBtn.addActionListener(this::onView);
         downloadBtn.addActionListener(this::onDownload);
-        backBtn.addActionListener(e -> mainApp.showDashboard(username));
-
+        backBtn.addActionListener(e -> {
+            String currentUser = mainApp.getCurrentUser();
+            mainApp.showDashboard(currentUser);
+        });
         loadHistory();
     }
 
-    private void loadHistory() {
+    public void loadHistory() {
         listModel.clear();
         List<String> items = historyService.getHistoryList(username);
         if (items != null) {

@@ -5,21 +5,19 @@ import application.HistoryService;
 import application.LoginService;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.*;
-import java.util.Date;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class DashboardPanel extends JPanel {
-    private MainAppUI mainApp;
-    private OCRUseCase ocrUseCase;
+    private final MainAppUI mainApp;
+    private CardLayout cardLayout;
+    private JPanel topPanel;
+    private final OCRUseCase ocrUseCase;
     private HistoryService historyService;
-    private LoginService loginService;
-    private ErrorHandler errorHandler;
-    private String username;
+    private final LoginService loginService;
+    private final ErrorHandler errorHandler;
+    private final String username;
 
-    private JTextArea textArea;
-    private JLabel imageLabel;
-    private File currentImageFile;
 
     public DashboardPanel(MainAppUI mainApp, OCRUseCase ocrUseCase, HistoryService historyService, LoginService loginService, ErrorHandler errorHandler, String username) {
         this.mainApp = mainApp;
@@ -30,74 +28,71 @@ public class DashboardPanel extends JPanel {
         this.username = username;
         initUI();
     }
-
     private void initUI() {
         setLayout(new BorderLayout());
-        JPanel topPanel = new JPanel();
-        JButton uploadBtn = new JButton("Upload Image");
-        JButton saveBtn = new JButton("Save as TXT");
-        JButton historyBtn = new JButton("View History");
+        cardLayout = new CardLayout();
+        topPanel = new JPanel(cardLayout);
+
+        //Create panels
+        JPanel mainMenuPanel = createMainMenuPanel();
+        CreateVisionTextPanel createVisionTextPanel = new CreateVisionTextPanel(mainApp,ocrUseCase,historyService,errorHandler,username);
+        HistoryPanel historyPanel = new HistoryPanel(mainApp, historyService, loginService, errorHandler, username);
+
+        //Add panels to the card layout
+        topPanel.add(mainMenuPanel, "mainMenu");
+        topPanel.add(createVisionTextPanel, "CreateVisionText");
+        topPanel.add(historyPanel, "history");
+        add(topPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createMainMenuPanel() {
+        JPanel mainMenuPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        mainMenuPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Create New button to upload/save
+        JButton createNew = new JButton("Create New VisionText");
+        createNew.addActionListener(e -> cardLayout.show(topPanel, "CreateVisionText"));
+
+        // Previous History - view/download/back
+        JButton historyBtn = new JButton("History");
+        historyBtn.addActionListener(e -> {
+            HistoryPanel historyPanel = (HistoryPanel) topPanel.getComponent(2);
+            historyPanel.loadHistory();
+            cardLayout.show(topPanel, "history");
+        });
+
+        //Log out button
         JButton logoutBtn = new JButton("Logout");
-        topPanel.add(uploadBtn);
-        topPanel.add(saveBtn);
-        topPanel.add(historyBtn);
-        topPanel.add(logoutBtn);
-        add(topPanel, BorderLayout.NORTH);
-
-        textArea = new JTextArea(20, 60);
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        add(scrollPane, BorderLayout.CENTER);
-
-        imageLabel = new JLabel();
-        add(imageLabel, BorderLayout.SOUTH);
-
-        uploadBtn.addActionListener(this::onUpload);
-        saveBtn.addActionListener(this::onSave);
-        historyBtn.addActionListener(e -> mainApp.showHistory(username));
         logoutBtn.addActionListener(e -> {
             loginService.logout();
             mainApp.showLoginScreen();
         });
+        // Style buttons
+        Font buttonFont = new Font("Arial", Font.BOLD, 16);
+        Dimension buttonSize = new Dimension(250, 50);
+        for (JButton btn : new JButton[]{createNew, historyBtn, logoutBtn}) {
+            btn.setFont(buttonFont);
+            btn.setSize(buttonSize);
+            // Add hover effects
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    btn.setBackground(new Color(255, 233, 0)); // Light gray
+                     }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    btn.setBackground(UIManager.getColor("Button.background"));
+                }
+            });
+        }
+            mainMenuPanel.add(createNew);
+            mainMenuPanel.add(historyBtn);
+            mainMenuPanel.add(logoutBtn);
+        return mainMenuPanel;
     }
 
-    private void onUpload(ActionEvent e) {
-        JFileChooser chooser = new JFileChooser();
-        int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            currentImageFile = chooser.getSelectedFile();
-            imageLabel.setText("Selected: " + currentImageFile.getName());
-            try {
-                String extracted = ocrUseCase.extractText(currentImageFile);
-                textArea.setText(extracted);
-            } catch (Exception ex) {
-                errorHandler.showError("OCR failed: " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    private void onSave(ActionEvent e) {
-        String text = textArea.getText();
-        if (text.isEmpty()) {
-            errorHandler.showError("No text to save.");
-            return;
-        }
-        JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new File("ocr_result.txt"));
-        int result = chooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            try (FileWriter fw = new FileWriter(file)) {
-                fw.write(text);
-            } catch (IOException ex) {
-                errorHandler.showError("Failed to save file: " + ex.getMessage(), ex);
-                return;
-            }
-        }
-        // Save to history
-        if (currentImageFile != null) {
-            historyService.saveHistory(username, currentImageFile.getName(), text, new Date().getTime());
-        }
-    }
-} 
+    public void showMainMenu() {
+    cardLayout.show(topPanel, "mainMenu");}
+}
