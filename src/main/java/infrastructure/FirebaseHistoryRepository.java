@@ -10,61 +10,52 @@ import java.util.List;
 import java.util.Map;
 
 import static shared.Config.getFirebaseRealTmeDBURL;
-import static shared.FirebaseUtil.post;
 import static shared.FirebaseUtil.get;
+import static shared.FirebaseUtil.post;
+import static shared.FirebaseUtil.delete;
 
 public class FirebaseHistoryRepository implements HistoryRepository {
     private final Gson gson;
-    String FIREBASE_URL = getFirebaseRealTmeDBURL();
+    private final String FIREBASE_URL = getFirebaseRealTmeDBURL();
 
     public FirebaseHistoryRepository() {
         this.gson = new Gson();
     }
 
     private String encodeUsername(String username) {
-        // Handle null username
-        if (username == null) {
-            return null;
-        }
-        // Replace @ and . with safe characters for Firebase keys
+        if (username == null) return null;
+        // Firebase keys can't contain '.', '#', '$', '[', ']' — you already replace @ and .
+        // Keep your convention for consistency:
         return username.replace("@", "_AT_").replace(".", "_DOT_");
     }
 
     @Override
     public void saveHistory(String username, String imageFilename, String textContent, long timestamp) throws IOException {
-        // Validate input parameters
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
-        if (imageFilename == null || imageFilename.isEmpty()) {
-            throw new IllegalArgumentException("Image filename cannot be null or empty");
-        }
+        // Allow empty filename (text-only items are valid)
         if (textContent == null) {
             throw new IllegalArgumentException("Text content cannot be null");
         }
 
-        // Encode username to handle special characters and fix URL construction
         String encodedUsername = encodeUsername(username);
         String url = FIREBASE_URL + "users/" + encodedUsername + "/history.json";
 
         try {
-            // Create the data structure for Realtime DB (plain JSON, not Firestore format)
             Map<String, Object> historyItem = new LinkedHashMap<>();
-            historyItem.put("filename", imageFilename);
+            historyItem.put("filename", imageFilename == null ? "" : imageFilename);
             historyItem.put("content", textContent);
             historyItem.put("timestamp", timestamp);
 
             String jsonPayload = gson.toJson(historyItem);
-
-            // POST to the .json endpoint to auto-generate a key
             String response = post(url, jsonPayload);
 
             if (response == null || response.isEmpty()) {
                 throw new IOException("Empty response from Firebase");
             }
-            // Optionally, parse response to check for name (the new key)
             JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
-            if (!jsonResponse.has("name")) {
+            if (jsonResponse == null || !jsonResponse.has("name")) {
                 throw new IOException("Failed to save history: " + response);
             }
         } catch (JsonSyntaxException e) {
@@ -76,7 +67,6 @@ public class FirebaseHistoryRepository implements HistoryRepository {
 
     @Override
     public List<String> getHistoryList(String username) {
-        // Handle null username early
         if (username == null || username.isEmpty()) {
             System.err.println("Username is null or empty, returning empty history list");
             return new ArrayList<>();
@@ -90,7 +80,8 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             String jsonResponse = get(url);
 
             if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
-                throw new RuntimeException("Empty response from Firebase");
+                // no history yet
+                return historyList;
             }
 
             JsonObject response = gson.fromJson(jsonResponse, JsonObject.class);
@@ -99,14 +90,21 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             }
 
             for (Map.Entry<String, JsonElement> entry : response.entrySet()) {
-                JsonObject item = entry.getValue().getAsJsonObject();
-                String filename = item.has("filename") ? item.get("filename").getAsString() : "unknown";
-                String timestamp = item.has("timestamp") ? item.get("timestamp").getAsString() : "unknown";
-                // Store the Firebase key with the display string, separated by a delimiter
                 String firebaseKey = entry.getKey();
+                JsonObject item = entry.getValue().getAsJsonObject();
+
+                String filename = item.has("filename") ? item.get("filename").getAsString() : "unknown";
+                long timestamp = 0L;
+                if (item.has("timestamp")) {
+                    try { timestamp = item.get("timestamp").getAsLong(); } catch (Exception ignored) {}
+                }
+
+                // What the user sees in the list
                 String displayString = filename + " (" + timestamp + ")";
-                // Format: "firebaseKey|||displayString" - using ||| as delimiter since it's unlikely to appear in filenames
-                historyList.add(firebaseKey + "|||" + displayString);
+
+                // Return with timestamp in the middle for date-sorting:
+                // format: key|||epochMillis|||display
+                historyList.add(firebaseKey + "|||" + timestamp + "|||" + displayString);
             }
         } catch (Exception e) {
             System.err.println("Error fetching history: " + e.getMessage());
@@ -117,7 +115,6 @@ public class FirebaseHistoryRepository implements HistoryRepository {
 
     @Override
     public String getHistoryItem(String username, String historyId) throws IOException {
-        // Handle null username
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
@@ -125,7 +122,7 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             throw new IllegalArgumentException("History ID cannot be null or empty");
         }
 
-        // Extract the actual Firebase key from the composite string
+        // Extract the actual Firebase key (historyId can be "key|||display" or "key|||epoch|||display")
         String actualKey = historyId;
         if (historyId.contains("|||")) {
             actualKey = historyId.split("\\|\\|\\|")[0];
@@ -135,7 +132,7 @@ public class FirebaseHistoryRepository implements HistoryRepository {
         String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
         try {
             String jsonResponse = get(url);
-            if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
+            if (jsonResponse == null || jsonResponse.isEmpty() || "null".equals(jsonResponse)) {
                 return null;
             }
             JsonObject item = gson.fromJson(jsonResponse, JsonObject.class);
@@ -149,4 +146,31 @@ public class FirebaseHistoryRepository implements HistoryRepository {
             throw new IOException("Invalid history item data structure", e);
         }
     }
+
+    @Override
+    public void deleteHistory(String username, String historyId) throws IOException {
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        if (historyId == null || historyId.isEmpty()) {
+            throw new IllegalArgumentException("History ID cannot be null or empty");
+        }
+
+        // Extract firebase key if a composite id was passed
+        String actualKey = historyId;
+        if (historyId.contains("|||")) {
+            actualKey = historyId.split("\\|\\|\\|")[0];
+        }
+
+        String encodedUsername = encodeUsername(username);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
+
+        try {
+            // Firebase Realtime DB: DELETE the node
+            delete(url);
+        } catch (Exception e) {
+            throw new IOException("Failed to delete history item", e);
+        }
+    }
 }
+
