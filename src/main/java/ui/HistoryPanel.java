@@ -25,7 +25,6 @@ public class HistoryPanel extends JPanel {
     private JList<String> historyList;
     private DefaultListModel<String> model;
 
-    /** Original items from the backend (may include key and epoch). */
     private final List<String> rawItems = new ArrayList<>();
 
     public HistoryPanel(MainAppUI mainApp, HistoryService historyService,
@@ -291,7 +290,6 @@ public class HistoryPanel extends JPanel {
         return item;                                 // plain display
     }
 
-    /** Extracts epoch millis if provided as "key|||epoch|||display"; else returns 0. */
     private static long extractEpoch(String item) {
         if (item == null) return 0L;
         String[] parts = item.split("\\|\\|\\|", 3);

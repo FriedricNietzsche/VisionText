@@ -6,7 +6,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-/** Idle = light grey; Hover = cool blue gradient; subtle elevation + press darken. */
 public class AnimatedButton extends JButton {
     private float progress = 0f;   // hover 0..1
     private float target   = 0f;

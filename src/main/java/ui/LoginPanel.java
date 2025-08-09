@@ -1,7 +1,6 @@
 package ui;
 
 import application.LoginService;
-import ui.AnimatedButton;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -61,7 +60,7 @@ public class LoginPanel extends JPanel {
         gbc.insets = new Insets(8, 10, 8, 10);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
 
-        JLabel title = new JLabel("VisionText");
+        JLabel title = new JLabel("VisionText Terminal");
         title.setFont(new Font("Arial", Font.BOLD, 24));
         title.setForeground(Theme.TEXT);
         card.add(title, gbc);
@@ -172,4 +171,3 @@ public class LoginPanel extends JPanel {
         }
     }
 }
-

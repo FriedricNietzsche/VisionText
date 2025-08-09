@@ -66,7 +66,7 @@ public class DashboardPanel extends JPanel {
         center.setOpaque(false);
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
 
-        AnimatedButton createNew = new AnimatedButton("Create New VisionText");
+        AnimatedButton createNew = new AnimatedButton("Lens Console");
         AnimatedButton historyBtn = new AnimatedButton("History");
 
         // Bigger buttons for center
@@ -127,10 +127,6 @@ public class DashboardPanel extends JPanel {
         cardLayout.show(topPanel, "mainMenu");
     }
 
-    /**
-     * Button: default gradient + hover animation.
-     * Now supports custom base & hover colors.
-     */
     private static class AnimatedButton extends JButton {
         private float progress = 0f;   // hover progress 0..1
         private float target = 0f;
@@ -241,5 +237,3 @@ public class DashboardPanel extends JPanel {
         }
     }
 }
-
-

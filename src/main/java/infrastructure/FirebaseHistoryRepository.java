@@ -173,4 +173,3 @@ public class FirebaseHistoryRepository implements HistoryRepository {
         }
     }
 }
-

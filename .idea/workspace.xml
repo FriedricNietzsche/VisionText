@@ -4,23 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="intital commit">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="MAJOR UI CHANGES">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/VisionText.iml" beforeDir="false" afterPath="$PROJECT_DIR$/VisionText.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/application/HistoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/application/HistoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/application/OCRUseCase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/application/OCRUseCase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/domain/port/HistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/domain/port/HistoryRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/shared/FirebaseUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/shared/FirebaseUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/AnimatedButton.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/AnimatedButton.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/Theme.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/Theme.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/Toast.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/Toast.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,7 +111,14 @@
       <option name="project" value="LOCAL" />
       <updated>1752602385742</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="MAJOR UI CHANGES">
+      <created>1754710645282</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754710645282</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -128,6 +126,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="intital commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="intital commit" />
+    <MESSAGE value="MAJOR UI CHANGES" />
+    <option name="LAST_COMMIT_MESSAGE" value="MAJOR UI CHANGES" />
   </component>
 </project>

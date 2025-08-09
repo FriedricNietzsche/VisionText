@@ -28,7 +28,7 @@ public class CreateVisionTextPanel extends JPanel {
     private final String username;
 
     private JLabel imageStatusLabel;
-    private JLabel preview;
+    private FitImagePanel previewCanvas;   // <— replaces JLabel with icon
     private JTextArea outputArea;
     private File currentImage;
     private final JPanel centerOverlay = new JPanel();
@@ -49,7 +49,7 @@ public class CreateVisionTextPanel extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout(0, 12));
         setBackground(Theme.BG);
-        setBorder(new EmptyBorder(10, 0, 10, 0)); // No left/right padding
+        setBorder(new EmptyBorder(10, 0, 10, 0));
 
         add(createHeaderPanel(), BorderLayout.NORTH);
         add(createCenterPanel(), BorderLayout.CENTER);
@@ -77,34 +77,28 @@ public class CreateVisionTextPanel extends JPanel {
         contentPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
 
-        // ===== LEFT BOX: Preview Panel (25% width) =====
+        // LEFT: preview (25%)
         JPanel previewPanel = new JPanel(new BorderLayout());
         previewPanel.setOpaque(true);
         previewPanel.setBackground(Color.WHITE);
         previewPanel.setBorder(BorderFactory.createLineBorder(Theme.OUTLINE));
 
-        preview = new JLabel(
-                "<html><div style='text-align:center;color:#666;'>Drop an image here</div></html>",
-                SwingConstants.CENTER
-        );
-        preview.setBorder(new EmptyBorder(10, 10, 10, 10));
-        previewPanel.add(preview, BorderLayout.CENTER);
+        previewCanvas = new FitImagePanel();
+        previewCanvas.setBorder(new EmptyBorder(10, 10, 10, 10));
+        previewPanel.add(previewCanvas, BorderLayout.CENTER);
 
         new DropTarget(previewPanel, new DropTargetAdapter() {
-            @Override public void drop(DropTargetDropEvent dtde) {
-                handleDrop(dtde);
-            }
+            @Override public void drop(DropTargetDropEvent dtde) { handleDrop(dtde); }
         });
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
         gbc.weightx = 0.25;
         gbc.insets = new Insets(0, 10, 0, 5);
         contentPanel.add(previewPanel, gbc);
 
-        // ===== RIGHT BOX: OCR Output Area (75% width) =====
+        // RIGHT: output (75%)
         outputArea = new JTextArea();
         outputArea.setLineWrap(true);
         outputArea.setWrapStyleWord(true);
@@ -121,7 +115,7 @@ public class CreateVisionTextPanel extends JPanel {
 
         overlayContainer.add(contentPanel);
 
-        // Loading overlay
+        // overlay
         centerOverlay.setOpaque(true);
         centerOverlay.setBackground(new Color(255, 255, 255, 180));
         centerOverlay.setLayout(new GridBagLayout());
@@ -135,7 +129,6 @@ public class CreateVisionTextPanel extends JPanel {
     }
 
     private JComponent createFooterPanel() {
-        // --- CHANGE: Reverted to the original centered button layout ---
         AnimatedButton uploadBtn = new AnimatedButton("Upload Image");
         AnimatedButton pasteBtn  = new AnimatedButton("Paste");
         AnimatedButton copyBtn   = new AnimatedButton("Copy");
@@ -154,16 +147,14 @@ public class CreateVisionTextPanel extends JPanel {
         uploadBtn.addActionListener(this::onUpload);
         pasteBtn.addActionListener(e -> pasteFromClipboard());
         copyBtn.addActionListener(e -> copyToClipboard());
-        clearBtn.addActionListener(e -> {
-            outputArea.setText("");
-            Toast.show(this, "Cleared");
-        });
+        clearBtn.addActionListener(e -> { outputArea.setText(""); Toast.show(this, "Cleared"); });
         saveBtn.addActionListener(this::onSave);
         backBtn.addActionListener(e -> mainApp.showDashboard(mainApp.getCurrentUser()));
 
         JPanel footer = new JPanel();
         footer.setOpaque(false);
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
+        footer.setBorder(new EmptyBorder(10, 10, 0, 10)); // align with boxes
         footer.add(Box.createHorizontalGlue());
         footer.add(uploadBtn); footer.add(Box.createHorizontalStrut(10));
         footer.add(pasteBtn);  footer.add(Box.createHorizontalStrut(10));
@@ -172,12 +163,10 @@ public class CreateVisionTextPanel extends JPanel {
         footer.add(saveBtn);   footer.add(Box.createHorizontalStrut(12));
         footer.add(backBtn);
         footer.add(Box.createHorizontalGlue());
-
         return footer;
     }
 
-    // --- Unchanged helper methods below this line ---
-
+    // --------- helpers ----------
     private void bindShortcuts() {
         bindShortcut(this, "control C", "copy", e -> copyToClipboard());
         bindShortcut(this, "control V", "paste", e -> pasteFromClipboard());
@@ -204,18 +193,13 @@ public class CreateVisionTextPanel extends JPanel {
                                      java.awt.event.ActionListener listener) {
         c.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(stroke), name);
         c.getActionMap().put(name, new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                listener.actionPerformed(e);
-            }
+            @Override public void actionPerformed(ActionEvent e) { listener.actionPerformed(e); }
         });
     }
 
     private void copyToClipboard() {
         String t = outputArea.getText();
-        if (t == null || t.trim().isEmpty()) {
-            Toast.show(this, "Nothing to copy");
-            return;
-        }
+        if (t == null || t.trim().isEmpty()) { Toast.show(this, "Nothing to copy"); return; }
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(t), null);
         Toast.show(this, "Copied");
     }
@@ -236,7 +220,6 @@ public class CreateVisionTextPanel extends JPanel {
                     return;
                 }
             }
-
             if (tr.isDataFlavorSupported(DataFlavor.stringFlavor)) {
                 String s = (String) tr.getTransferData(DataFlavor.stringFlavor);
                 if (s != null && !s.isEmpty()) {
@@ -246,7 +229,6 @@ public class CreateVisionTextPanel extends JPanel {
                     return;
                 }
             }
-
             Toast.show(this, "Nothing to paste");
         } catch (Exception ex) {
             errorHandler.showError("Paste failed: " + ex.getMessage(), ex);
@@ -255,41 +237,26 @@ public class CreateVisionTextPanel extends JPanel {
 
     private File writeImageToTemp(Image image) throws Exception {
         int w = image.getWidth(null), h = image.getHeight(null);
-        if (w <= 0 || h <= 0) {
-            throw new IllegalArgumentException("Cannot process an empty image.");
-        }
+        if (w <= 0 || h <= 0) throw new IllegalArgumentException("Cannot process an empty image.");
         BufferedImage bi = new BufferedImage(w, h, TYPE_INT_ARGB);
         Graphics2D g2 = bi.createGraphics();
         g2.drawImage(image, 0, 0, null);
         g2.dispose();
-
         File tmp = File.createTempFile("visiontext_clip_", ".png");
         javax.imageio.ImageIO.write(bi, "png", tmp);
         tmp.deleteOnExit();
         return tmp;
     }
 
+    /** Load the image and paint it into the fixed preview box (no layout changes). */
     private void setPreviewImage(File f) {
         try {
             ImageIcon icon = new ImageIcon(f.getAbsolutePath());
-            Container holder = preview.getParent();
-
-            int padding = 20; // 10px on each side
-            int maxW = Math.max(1, holder.getWidth() - padding);
-            int maxH = Math.max(1, holder.getHeight() - padding);
-
-            Image img = icon.getImage();
-            double ratio = Math.min((double) maxW / img.getWidth(null),
-                    (double) maxH / img.getHeight(null));
-            int w = Math.max(1, (int) (img.getWidth(null) * ratio));
-            int h = Math.max(1, (int) (img.getHeight(null) * ratio));
-
-            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-            preview.setIcon(new ImageIcon(scaled));
-            preview.setText(null);
+            previewCanvas.setImage(icon.getImage());
+            previewCanvas.repaint();
         } catch (Exception ex) {
-            preview.setIcon(null);
-            preview.setText("<html><div style='text-align:center;'>Preview<br>unavailable</div></html>");
+            previewCanvas.setImage(null);
+            previewCanvas.repaint();
             errorHandler.showError("Could not display preview: " + ex.getMessage(), ex);
         }
     }
@@ -308,13 +275,8 @@ public class CreateVisionTextPanel extends JPanel {
     private void runOCR(File image) {
         setBusy(true);
         new SwingWorker<String, Void>() {
-            @Override
-            protected String doInBackground() throws Exception {
-                return ocrUseCase.runOCR(image);
-            }
-
-            @Override
-            protected void done() {
+            @Override protected String doInBackground() throws Exception { return ocrUseCase.runOCR(image); }
+            @Override protected void done() {
                 setBusy(false);
                 try {
                     String text = get();
@@ -330,9 +292,7 @@ public class CreateVisionTextPanel extends JPanel {
         }.execute();
     }
 
-    private void setBusy(boolean busy) {
-        centerOverlay.setVisible(busy);
-    }
+    private void setBusy(boolean busy) { centerOverlay.setVisible(busy); }
 
     private void onSave(ActionEvent e) {
         String text = outputArea.getText();
@@ -351,5 +311,46 @@ public class CreateVisionTextPanel extends JPanel {
             }
         }
     }
-}
 
+    /* ============================================================
+       A fixed-size image component that always paints the image
+       scaled to fit inside the available bounds (keeps aspect ratio)
+       without affecting layout sizes.
+       ============================================================ */
+    private static class FitImagePanel extends JPanel {
+        private Image image;
+
+        public void setImage(Image img) { this.image = img; }
+
+        @Override protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int w = getWidth(), h = getHeight();
+
+            if (image == null) {
+                // hint text (same as before)
+                g2.setColor(new Color(0,0,0,60));
+                String msg = "Drop image";
+                FontMetrics fm = g2.getFontMetrics();
+                int tx = (w - fm.stringWidth(msg)) / 2;
+                int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
+                g2.drawString(msg, tx, ty);
+            } else {
+                int iw = image.getWidth(null);
+                int ih = image.getHeight(null);
+                if (iw > 0 && ih > 0) {
+                    double scale = Math.min((double) w / iw, (double) h / ih);
+                    int dw = (int) Math.round(iw * scale);
+                    int dh = (int) Math.round(ih * scale);
+                    int x = (w - dw) / 2;
+                    int y = (h - dh) / 2;
+                    g2.drawImage(image, x, y, dw, dh, null);
+                }
+            }
+            g2.dispose();
+        }
+    }
+}
