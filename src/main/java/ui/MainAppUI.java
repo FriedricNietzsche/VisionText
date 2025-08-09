@@ -1,5 +1,6 @@
 package ui;
 
+import ui.Theme;
 import application.LoginService;
 import application.OCRUseCase;
 import application.HistoryService;
@@ -86,9 +87,12 @@ public class MainAppUI {
         frame.setTitle("VisionText - History");
     }
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MainAppUI::new);
-    }
+        SwingUtilities.invokeLater(() -> {
+            Theme.apply();
+            new MainAppUI();
+        });
 
+    }
     public String getCurrentUser() {
         return this.username;
     }

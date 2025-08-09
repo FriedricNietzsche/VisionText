@@ -4,11 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="intital commit">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+    <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="MAJOR UI CHANGES">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/AnimatedButton.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/AnimatedButton.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +27,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -38,24 +46,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Application.MainAppUI.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "onboarding.tips.debug.path": "/Users/krisviraujla/IdeaProjects/VisionText/src/Main.java",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Application.MainAppUI.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;/Users/krisviraujla/IdeaProjects/VisionText/src/Main.java&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="MainAppUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="ui.MainAppUI" />
@@ -103,7 +111,14 @@
       <option name="project" value="LOCAL" />
       <updated>1752602385742</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="MAJOR UI CHANGES">
+      <created>1754710645282</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754710645282</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -111,6 +126,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="intital commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="intital commit" />
+    <MESSAGE value="MAJOR UI CHANGES" />
+    <option name="LAST_COMMIT_MESSAGE" value="MAJOR UI CHANGES" />
   </component>
 </project>
