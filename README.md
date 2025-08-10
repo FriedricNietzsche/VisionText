@@ -51,7 +51,7 @@ Follows **Clean Architecture** and **SOLID** principles.
 
 ## Usage Instructions
 1. **Login**  
-   ![Login Screen](screenshots/login.png)
+   <img width="1182" height="792" alt="ebacfb74-4086-48a7-91dc-9e4dbe9f7c2e" src="https://github.com/user-attachments/assets/7dbb82ef-c70b-49cb-a123-b3b20b87a111" />
 2. **Dashboard**  
    ![Dashboard Screen](screenshots/dashboard.png)
 3. **Upload an Image**  
