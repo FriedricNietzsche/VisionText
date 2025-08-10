@@ -5,18 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="MAJOR UI CHANGES">
-      <change afterPath="$PROJECT_DIR$/src/main/java/ui/ModernButton.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/infrastructure/FirebaseHistoryRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/Theme.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/Theme.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/Toast.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/Toast.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +63,7 @@
     "Application.MainAppUI.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "Kris-Test",
+    "git-widget-placeholder": "Kris-Aujla",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",

@@ -8,7 +8,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-public class DashboardPanel extends JPanel {
+public class DashboardPanel extends JPanel implements ThemeAware {
     private final MainAppUI mainApp;
     private final OCRUseCase ocrUseCase;
     private final HistoryService historyService;
@@ -35,6 +35,7 @@ public class DashboardPanel extends JPanel {
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
+    Theme.addListener(this);
     }
 
     private void initUI() {
@@ -268,6 +269,9 @@ public class DashboardPanel extends JPanel {
         revalidate();
         repaint();
     }
+
+    @Override
+    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
 
     private void refreshComponentTree(Component comp) {
         if (comp instanceof JPanel) {

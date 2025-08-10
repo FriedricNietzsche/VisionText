@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
-public class CreateVisionTextPanel extends JPanel {
+public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
     private final MainAppUI mainApp;
     private final OCRUseCase ocrUseCase;
@@ -43,6 +43,7 @@ public class CreateVisionTextPanel extends JPanel {
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
+    Theme.addListener(this);
     }
 
     private void initUI() {
@@ -443,6 +444,9 @@ public class CreateVisionTextPanel extends JPanel {
         revalidate();
         repaint();
     }
+
+    @Override
+    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
 
     // Custom image preview component
     private static class ModernImagePreview extends JPanel {

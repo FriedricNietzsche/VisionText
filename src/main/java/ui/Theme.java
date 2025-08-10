@@ -2,6 +2,11 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class Theme {
     private Theme() {}
@@ -71,6 +76,30 @@ public final class Theme {
     }
 
     private static boolean isDarkMode = false;
+    private static final String PREF_FILE = "theme.properties";
+    private static final String KEY_DARK = "dark";
+    private static final List<ThemeAware> listeners = new CopyOnWriteArrayList<>();
+    private static boolean fadeTransitions = true;
+
+    public static void loadPersistedTheme() {
+        try (FileInputStream fis = new FileInputStream(PREF_FILE)) {
+            java.util.Properties p = new java.util.Properties();
+            p.load(fis);
+            isDarkMode = Boolean.parseBoolean(p.getProperty(KEY_DARK, "false"));
+        } catch (IOException ignored) { }
+    }
+
+    private static void persistTheme() {
+        try (FileOutputStream fos = new FileOutputStream(PREF_FILE)) {
+            java.util.Properties p = new java.util.Properties();
+            p.setProperty(KEY_DARK, Boolean.toString(isDarkMode));
+            p.store(fos, "VisionText theme preference");
+        } catch (IOException ignored) { }
+    }
+
+    public static void addListener(ThemeAware l) { if (l != null) listeners.add(l); }
+    public static void removeListener(ThemeAware l) { listeners.remove(l); }
+    public static void setFadeTransitions(boolean enable) { fadeTransitions = enable; }
 
     public static void applyModernTheme() {
         try {
@@ -163,13 +192,61 @@ public final class Theme {
     }
 
     public static void toggleTheme() {
+        Color previous = getBackgroundColor();
         isDarkMode = !isDarkMode;
         applyModernTheme();
+        persistTheme();
 
         // Update all windows
         for (Window window : Window.getWindows()) {
-            SwingUtilities.updateComponentTreeUI(window);
+            if (fadeTransitions && window.isDisplayable()) {
+                applyFade(window, previous);
+            } else {
+                SwingUtilities.updateComponentTreeUI(window);
+                window.repaint();
+            }
         }
+        for (ThemeAware l : listeners) {
+            try { l.onThemeChanged(previous); } catch (Exception ignored) { }
+        }
+    }
+
+    private static void applyFade(Window window, Color previousBg) {
+        // Simple fade by overlaying a panel that cross-fades
+        if (!(window instanceof JFrame)) {
+            SwingUtilities.updateComponentTreeUI(window);
+            return;
+        }
+        JFrame frame = (JFrame) window;
+        JRootPane root = frame.getRootPane();
+        final JComponent glass = new JComponent() {
+            float alpha = 1f;
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(new Color(previousBg.getRed(), previousBg.getGreen(), previousBg.getBlue(), (int)(255 * alpha)));
+                g2.fillRect(0,0,getWidth(),getHeight());
+                g2.dispose();
+            }
+        };
+        glass.setOpaque(false);
+        root.setGlassPane(glass);
+        glass.setVisible(true);
+        SwingUtilities.updateComponentTreeUI(window);
+        // Timer to fade out
+        new Timer(15, new java.awt.event.ActionListener() {
+            float alpha = 1f;
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) {
+                alpha -= 0.07f;
+                if (alpha <= 0f) {
+                    glass.setVisible(false);
+                    ((Timer) e.getSource()).stop();
+                } else {
+                    // set alpha via client property or repaint using reflection of field
+                    // repaint with previous alpha value
+                    glass.repaint();
+                }
+            }
+        }).start();
     }
 
     public static boolean isDarkMode() {

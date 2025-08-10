@@ -125,7 +125,8 @@ public class MainAppUI {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Apply modern theme before creating UI
+            // Load & apply persisted theme before creating UI
+            Theme.loadPersistedTheme();
             Theme.applyModernTheme();
             new MainAppUI();
         });

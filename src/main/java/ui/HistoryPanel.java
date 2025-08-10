@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class HistoryPanel extends JPanel {
+public class HistoryPanel extends JPanel implements ThemeAware {
     private final MainAppUI mainApp;
     private final HistoryService historyService;
     private final LoginService loginService;
@@ -34,6 +34,7 @@ public class HistoryPanel extends JPanel {
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
+    Theme.addListener(this);
     }
 
     private void initUI() {
@@ -215,6 +216,9 @@ public class HistoryPanel extends JPanel {
             repaint();
         });
     }
+
+    @Override
+    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
 
     private void updateComponentColors(Component c) {
         if (c instanceof JLabel) {

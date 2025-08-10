@@ -8,7 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-public class LoginPanel extends JPanel {
+public class LoginPanel extends JPanel implements ThemeAware {
     private final MainAppUI mainApp;
     private final LoginService loginService;
     private final ErrorHandler errorHandler;
@@ -24,6 +24,7 @@ public class LoginPanel extends JPanel {
         this.loginService = loginService;
         this.errorHandler = errorHandler;
         initUI();
+    Theme.addListener(this);
     }
 
     private void initUI() {
@@ -358,6 +359,9 @@ public class LoginPanel extends JPanel {
             repaint();
         });
     }
+
+    @Override
+    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
 
     private void updateColors(Component c) {
         if (c instanceof JLabel) {
