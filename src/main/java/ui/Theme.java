@@ -79,8 +79,10 @@ public final class Theme {
     private static final String PREF_FILE = "theme.properties";
     private static final String KEY_DARK = "dark";
     private static final String KEY_ANIM = "animations";
+    private static final String KEY_ACCENT = "accent"; // stored as R,G,B
     private static final List<ThemeAware> listeners = new CopyOnWriteArrayList<>();
     private static boolean fadeTransitions = true;
+    private static Color customPrimary = null;
 
     public static void loadPersistedTheme() {
         try (FileInputStream fis = new FileInputStream(PREF_FILE)) {
@@ -88,6 +90,13 @@ public final class Theme {
             p.load(fis);
             isDarkMode = Boolean.parseBoolean(p.getProperty(KEY_DARK, "false"));
             fadeTransitions = Boolean.parseBoolean(p.getProperty(KEY_ANIM, "true"));
+            String accent = p.getProperty(KEY_ACCENT, null);
+            if (accent != null && accent.matches("\\d+,\\d+,\\d+")) {
+                String[] parts = accent.split(",");
+                try {
+                    customPrimary = new Color(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                } catch (NumberFormatException ignore) { customPrimary = null; }
+            }
         } catch (IOException ignored) { }
     }
 
@@ -96,6 +105,9 @@ public final class Theme {
             java.util.Properties p = new java.util.Properties();
             p.setProperty(KEY_DARK, Boolean.toString(isDarkMode));
             p.setProperty(KEY_ANIM, Boolean.toString(fadeTransitions));
+            if (customPrimary != null) {
+                p.setProperty(KEY_ACCENT, customPrimary.getRed()+","+customPrimary.getGreen()+","+customPrimary.getBlue());
+            }
             p.store(fos, "VisionText theme preference");
         } catch (IOException ignored) { }
     }
@@ -275,8 +287,21 @@ public final class Theme {
 
     // Utility methods for getting current theme colors
     public static Color getPrimaryColor() {
+        if (customPrimary != null) return customPrimary;
         return isDarkMode ? Colors.DARK_PRIMARY : Colors.LIGHT_PRIMARY;
     }
+
+    public static void setCustomPrimary(Color c) {
+        customPrimary = c;
+        persistTheme();
+    }
+
+    public static void clearCustomPrimary() {
+        customPrimary = null;
+        persistTheme();
+    }
+
+    public static Color getCustomPrimary() { return customPrimary; }
 
     public static Color getBackgroundColor() {
         return isDarkMode ? Colors.DARK_BG : Colors.LIGHT_BG;

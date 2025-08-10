@@ -75,7 +75,10 @@ public class MainAppUI {
 
     restoreWindowPrefs();
     addMenu();
-    frame.setVisible(true);
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override public void windowClosing(java.awt.event.WindowEvent e) { saveWindowPrefs(); }
+        });
+        frame.setVisible(true);
         frame.pack();
     }
 
@@ -174,8 +177,11 @@ public class MainAppUI {
         });
         JMenuItem savePrefs = new JMenuItem("Save Layout");
         savePrefs.addActionListener(e -> saveWindowPrefs());
-        app.add(toggleAnim);
-        app.add(savePrefs);
+    JMenuItem settings = new JMenuItem("Settings...");
+    settings.addActionListener(e -> new SettingsDialog(frame).setVisible(true));
+    app.add(settings);
+    app.add(toggleAnim);
+    app.add(savePrefs);
         bar.add(app);
         frame.setJMenuBar(bar);
     }

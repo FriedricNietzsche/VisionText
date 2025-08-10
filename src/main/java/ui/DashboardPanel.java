@@ -96,9 +96,27 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         subtitleLabel.setForeground(Theme.getSecondaryTextColor());
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        header.add(welcomeLabel);
-        header.add(Box.createVerticalStrut(Theme.Spacing.SM));
-        header.add(subtitleLabel);
+    // Row container to place settings button to the right
+    JPanel row = new JPanel(new BorderLayout());
+    row.setOpaque(false);
+    JPanel textCol = new JPanel();
+    textCol.setOpaque(false);
+    textCol.setLayout(new BoxLayout(textCol, BoxLayout.Y_AXIS));
+    textCol.add(welcomeLabel);
+    textCol.add(Box.createVerticalStrut(Theme.Spacing.SM));
+    textCol.add(subtitleLabel);
+
+    // Settings button (gear)
+    ModernButton settingsBtn = new ModernButton("⚙ Settings", ModernButton.Style.GHOST);
+    settingsBtn.setPreferredSize(new Dimension(120, 36));
+    settingsBtn.addActionListener(e -> new SettingsDialog(mainApp.frame).setVisible(true));
+    JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+    right.setOpaque(false);
+    right.add(settingsBtn);
+
+    row.add(textCol, BorderLayout.CENTER);
+    row.add(right, BorderLayout.EAST);
+    header.add(row);
 
         return header;
     }
