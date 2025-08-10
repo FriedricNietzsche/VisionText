@@ -78,6 +78,7 @@ public final class Theme {
     private static boolean isDarkMode = false;
     private static final String PREF_FILE = "theme.properties";
     private static final String KEY_DARK = "dark";
+    private static final String KEY_ANIM = "animations";
     private static final List<ThemeAware> listeners = new CopyOnWriteArrayList<>();
     private static boolean fadeTransitions = true;
 
@@ -86,6 +87,7 @@ public final class Theme {
             java.util.Properties p = new java.util.Properties();
             p.load(fis);
             isDarkMode = Boolean.parseBoolean(p.getProperty(KEY_DARK, "false"));
+            fadeTransitions = Boolean.parseBoolean(p.getProperty(KEY_ANIM, "true"));
         } catch (IOException ignored) { }
     }
 
@@ -93,13 +95,15 @@ public final class Theme {
         try (FileOutputStream fos = new FileOutputStream(PREF_FILE)) {
             java.util.Properties p = new java.util.Properties();
             p.setProperty(KEY_DARK, Boolean.toString(isDarkMode));
+            p.setProperty(KEY_ANIM, Boolean.toString(fadeTransitions));
             p.store(fos, "VisionText theme preference");
         } catch (IOException ignored) { }
     }
 
     public static void addListener(ThemeAware l) { if (l != null) listeners.add(l); }
     public static void removeListener(ThemeAware l) { listeners.remove(l); }
-    public static void setFadeTransitions(boolean enable) { fadeTransitions = enable; }
+    public static void setFadeTransitions(boolean enable) { fadeTransitions = enable; persistTheme(); }
+    public static boolean isFadeTransitions() { return fadeTransitions; }
 
     public static void applyModernTheme() {
         try {
@@ -212,18 +216,19 @@ public final class Theme {
     }
 
     private static void applyFade(Window window, Color previousBg) {
-        // Simple fade by overlaying a panel that cross-fades
         if (!(window instanceof JFrame)) {
             SwingUtilities.updateComponentTreeUI(window);
             return;
         }
         JFrame frame = (JFrame) window;
         JRootPane root = frame.getRootPane();
+        final float[] alpha = {1f};
         final JComponent glass = new JComponent() {
-            float alpha = 1f;
             @Override protected void paintComponent(Graphics g) {
+                if (alpha[0] <= 0f) return;
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(new Color(previousBg.getRed(), previousBg.getGreen(), previousBg.getBlue(), (int)(255 * alpha)));
+                g2.setComposite(AlphaComposite.SrcOver.derive(alpha[0]));
+                g2.setColor(previousBg);
                 g2.fillRect(0,0,getWidth(),getHeight());
                 g2.dispose();
             }
@@ -232,21 +237,36 @@ public final class Theme {
         root.setGlassPane(glass);
         glass.setVisible(true);
         SwingUtilities.updateComponentTreeUI(window);
-        // Timer to fade out
-        new Timer(15, new java.awt.event.ActionListener() {
-            float alpha = 1f;
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) {
-                alpha -= 0.07f;
-                if (alpha <= 0f) {
-                    glass.setVisible(false);
-                    ((Timer) e.getSource()).stop();
-                } else {
-                    // set alpha via client property or repaint using reflection of field
-                    // repaint with previous alpha value
-                    glass.repaint();
-                }
+        new Timer(15, e -> {
+            alpha[0] -= 0.07f;
+            if (alpha[0] <= 0f) {
+                glass.setVisible(false);
+                ((Timer) e.getSource()).stop();
+            } else {
+                glass.repaint();
             }
         }).start();
+    }
+
+    // Central color utilities
+    public static final class ColorUtil {
+        public static Color darken(Color c, float factor) {
+            return new Color(
+                Math.max(0, (int)(c.getRed() * (1 - factor))),
+                Math.max(0, (int)(c.getGreen() * (1 - factor))),
+                Math.max(0, (int)(c.getBlue() * (1 - factor))),
+                c.getAlpha());
+        }
+        public static Color lighten(Color c, float factor) {
+            return new Color(
+                Math.min(255, (int)(c.getRed() + (255 - c.getRed()) * factor)),
+                Math.min(255, (int)(c.getGreen() + (255 - c.getGreen()) * factor)),
+                Math.min(255, (int)(c.getBlue() + (255 - c.getBlue()) * factor)),
+                c.getAlpha());
+        }
+        public static Color transparent(Color c, float alpha) {
+            return new Color(c.getRed(), c.getGreen(), c.getBlue(), (int)(255 * alpha));
+        }
     }
 
     public static boolean isDarkMode() {

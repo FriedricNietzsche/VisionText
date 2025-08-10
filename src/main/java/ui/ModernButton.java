@@ -135,13 +135,13 @@ public class ModernButton extends JButton {
         }
 
         if (!isEnabled()) {
-            return makeTransparent(baseColor, 0.5f);
+            return Theme.ColorUtil.transparent(baseColor, 0.5f);
         } else if (isPressed) {
-            return darken(baseColor, 0.2f);
+            return Theme.ColorUtil.darken(baseColor, 0.2f);
         } else if (isHovered) {
             return style == Style.GHOST ?
-                makeTransparent(Theme.getPrimaryColor(), 0.1f) :
-                lighten(baseColor, 0.1f);
+                Theme.ColorUtil.transparent(Theme.getPrimaryColor(), 0.1f) :
+                Theme.ColorUtil.lighten(baseColor, 0.1f);
         }
 
         return baseColor;
@@ -172,31 +172,5 @@ public class ModernButton extends JButton {
         return null;
     }
 
-    // Utility methods for color manipulation
-    private Color darken(Color color, float factor) {
-        return new Color(
-            Math.max(0, (int)(color.getRed() * (1 - factor))),
-            Math.max(0, (int)(color.getGreen() * (1 - factor))),
-            Math.max(0, (int)(color.getBlue() * (1 - factor))),
-            color.getAlpha()
-        );
-    }
-
-    private Color lighten(Color color, float factor) {
-        return new Color(
-            Math.min(255, (int)(color.getRed() + (255 - color.getRed()) * factor)),
-            Math.min(255, (int)(color.getGreen() + (255 - color.getGreen()) * factor)),
-            Math.min(255, (int)(color.getBlue() + (255 - color.getBlue()) * factor)),
-            color.getAlpha()
-        );
-    }
-
-    private Color makeTransparent(Color color, float alpha) {
-        return new Color(
-            color.getRed(),
-            color.getGreen(),
-            color.getBlue(),
-            (int)(255 * alpha)
-        );
-    }
+    // Removed local color manipulation methods in favor of Theme.ColorUtil
 }

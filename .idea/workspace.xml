@@ -5,13 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="22c27b01-98bb-47c3-b81e-ab4f78061270" name="Changes" comment="MAJOR UI CHANGES">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/CreateVisionTextPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/DashboardPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/HistoryPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/LoginPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/MainAppUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ui/ModernButton.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/ModernButton.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ui/Theme.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ui/Theme.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/theme.properties" beforeDir="false" afterPath="$PROJECT_DIR$/theme.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
