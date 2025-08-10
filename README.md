@@ -51,21 +51,24 @@ Follows **Clean Architecture** and **SOLID** principles.
 
 ## Usage Instructions
 1. **Login**  
-   ![Login Screen](screenshots/login.png)
+   <img width="1182" height="792" alt="ebacfb74-4086-48a7-91dc-9e4dbe9f7c2e" src="https://github.com/user-attachments/assets/7dbb82ef-c70b-49cb-a123-b3b20b87a111" />
 2. **Dashboard**  
-   ![Dashboard Screen](screenshots/dashboard.png)
+   <img width="1179" height="792" alt="6026e807-d863-4467-82bf-7fd20de74148" src="https://github.com/user-attachments/assets/c039f48c-9c4a-4b37-8cdd-81d2656bc36c" />
 3. **Upload an Image**  
-   ![Upload Screen](screenshots/upload.png)
+   <img width="1181" height="790" alt="aa80808f-1fc5-4d60-9cc2-86969baf26bc" src="https://github.com/user-attachments/assets/2c481667-0dc4-49cc-94c7-490e611325d7" />
 4. **Extract Text**  
-   ![OCR Result Screen](screenshots/ocr_result.png)
-5. **View History**  
-   ![History Screen](screenshots/history.png)
-6. **Settings Menu**  
-   ![Settings Screen](screenshots/settings.png)
-7. **Change Accent Color**  
-   ![Color Picker Screen](screenshots/color_picker.png)
-8. **Dark Mode Login**  
-   ![Dark Mode Login Screen](screenshots/login_dark.png)
+   <img width="1185" height="786" alt="image" src="https://github.com/user-attachments/assets/d0f60478-d193-4ae5-8af8-6069cea97319" />
+   <img width="1184" height="786" alt="image" src="https://github.com/user-attachments/assets/679f7148-17b1-4542-aaf4-70a264664e9c" />
+6. **View History**  
+   <img width="1181" height="786" alt="image" src="https://github.com/user-attachments/assets/69f81d19-c428-44f0-b0c1-1d62c77265d2" />
+   <img width="1182" height="789" alt="image" src="https://github.com/user-attachments/assets/a501a33f-a6c9-46dd-8e78-19c1324c8b40" />
+8. **Settings Menu**  
+   <img width="1181" height="790" alt="8aad8e8e-94c2-4312-8302-a20eb68b31e1" src="https://github.com/user-attachments/assets/7db1f6b9-e288-409d-b05a-b9f2dad76eda" />
+9. **Change Accent Color**  
+   <img width="1173" height="788" alt="01b3dea9-bac0-48da-8051-f617426fe39a" src="https://github.com/user-attachments/assets/a9c47b3b-eb3c-4ceb-abdb-43518ad8bf45" />
+10. **Dark Mode Login**  
+   <img width="1182" height="781" alt="919fdade-39eb-4114-a061-30066881d22f" src="https://github.com/user-attachments/assets/4f87b1c8-1063-401c-af6a-d92f97cca798" />
+
 
 ---
 
