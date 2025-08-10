@@ -58,6 +58,7 @@ Follows **Clean Architecture** and **SOLID** principles.
    <img width="1181" height="790" alt="aa80808f-1fc5-4d60-9cc2-86969baf26bc" src="https://github.com/user-attachments/assets/2c481667-0dc4-49cc-94c7-490e611325d7" />
 4. **Extract Text**  
    <img width="1185" height="786" alt="image" src="https://github.com/user-attachments/assets/d0f60478-d193-4ae5-8af8-6069cea97319" />
+   <img width="1184" height="786" alt="image" src="https://github.com/user-attachments/assets/679f7148-17b1-4542-aaf4-70a264664e9c" />
 6. **View History**  
    <img width="1181" height="783" alt="b88d8663-3ff0-4c0f-bcd4-9bc42e942d97" src="https://github.com/user-attachments/assets/3ba2ec1f-875b-40fa-9815-6ec48c9f3232" />
 7. **Settings Menu**  
