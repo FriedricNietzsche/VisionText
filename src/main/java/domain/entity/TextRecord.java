@@ -1,10 +1,10 @@
 package domain.entity;
 
-public class TextRecord {
-    private String id;
-    private String imageFilename;
-    private String textContent;
-    private long timestamp;
+public final class TextRecord {
+    private final String id;
+    private final String imageFilename;
+    private final String textContent;
+    private final long timestamp;
 
     public TextRecord(String id, String imageFilename, String textContent, long timestamp) {
         this.id = id;

@@ -1,7 +1,8 @@
 package application;
 
-import domain.port.OCRProcessor;
 import java.io.File;
+
+import domain.port.OCRProcessor;
 
 public class OCRUseCase {
     private final OCRProcessor ocrProcessor;
@@ -10,13 +11,23 @@ public class OCRUseCase {
         this.ocrProcessor = ocrProcessor;
     }
 
-    /** Existing API */
+    /**
+     * Existing API.
+     * @param imageFile the image
+     * @return text output
+     * @throws Exception error
+     */
     public String extractText(File imageFile) throws Exception {
         return ocrProcessor.extractTextFromImage(imageFile);
     }
 
-    /** Convenience alias used by UI panels */
-    public String runOCR(File imageFile) throws Exception {
+    /**
+     * Convenience alias used by UI panels.
+     * @param imageFile the image
+     * @return text output
+     * @throws Exception error
+     */
+    public String runOcr(File imageFile) throws Exception {
         return extractText(imageFile);
     }
 }
