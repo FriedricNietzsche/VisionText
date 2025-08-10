@@ -60,12 +60,13 @@ Follows **Clean Architecture** and **SOLID** principles.
    <img width="1185" height="786" alt="image" src="https://github.com/user-attachments/assets/d0f60478-d193-4ae5-8af8-6069cea97319" />
    <img width="1184" height="786" alt="image" src="https://github.com/user-attachments/assets/679f7148-17b1-4542-aaf4-70a264664e9c" />
 6. **View History**  
-   <img width="1181" height="783" alt="b88d8663-3ff0-4c0f-bcd4-9bc42e942d97" src="https://github.com/user-attachments/assets/3ba2ec1f-875b-40fa-9815-6ec48c9f3232" />
-7. **Settings Menu**  
+   <img width="1181" height="786" alt="image" src="https://github.com/user-attachments/assets/69f81d19-c428-44f0-b0c1-1d62c77265d2" />
+   <img width="1182" height="789" alt="image" src="https://github.com/user-attachments/assets/a501a33f-a6c9-46dd-8e78-19c1324c8b40" />
+8. **Settings Menu**  
    <img width="1181" height="790" alt="8aad8e8e-94c2-4312-8302-a20eb68b31e1" src="https://github.com/user-attachments/assets/7db1f6b9-e288-409d-b05a-b9f2dad76eda" />
-8. **Change Accent Color**  
+9. **Change Accent Color**  
    <img width="1173" height="788" alt="01b3dea9-bac0-48da-8051-f617426fe39a" src="https://github.com/user-attachments/assets/a9c47b3b-eb3c-4ceb-abdb-43518ad8bf45" />
-9. **Dark Mode Login**  
+10. **Dark Mode Login**  
    <img width="1182" height="781" alt="919fdade-39eb-4114-a061-30066881d22f" src="https://github.com/user-attachments/assets/4f87b1c8-1063-401c-af6a-d92f97cca798" />
 
 
