@@ -2,11 +2,11 @@ package ui;
 
 import application.LoginService;
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 public class LoginPanel extends JPanel {
     private final MainAppUI mainApp;
@@ -15,6 +15,9 @@ public class LoginPanel extends JPanel {
 
     private JTextField emailField;
     private JPasswordField passwordField;
+    private JButton loginBtn;
+    private JButton registerBtn;
+    private JButton themeToggleBtn;
 
     public LoginPanel(MainAppUI mainApp, LoginService loginService, ErrorHandler errorHandler) {
         this.mainApp = mainApp;
@@ -25,149 +28,347 @@ public class LoginPanel extends JPanel {
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(Theme.BG);
+        setBackground(Theme.getBackgroundColor());
 
-        JPanel center = new JPanel();
-        center.setOpaque(false);
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setBorder(new EmptyBorder(32, 24, 32, 24));
-        add(center, BorderLayout.CENTER);
+        // Main container with proper spacing
+        JPanel container = new JPanel(new GridBagLayout());
+        container.setOpaque(false);
+        container.setBorder(new EmptyBorder(Theme.Spacing.XXL, Theme.Spacing.LG, Theme.Spacing.XXL, Theme.Spacing.LG));
 
-        JPanel card = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int w = getWidth(), h = getHeight(), arc = 20;
-                g2.setColor(new Color(0, 0, 0, 30));
-                g2.fillRoundRect(6, 10, w - 12, h - 12, arc, arc);
-                GradientPaint gp = new GradientPaint(0, 0, Theme.CARD_TOP, 0, h, Theme.CARD_BOTTOM);
-                g2.setPaint(gp); g2.fillRoundRect(0, 4, w, h - 8, arc, arc);
-                g2.setColor(Theme.OUTLINE); g2.drawRoundRect(0, 4, w - 1, h - 9, arc, arc);
-                g2.dispose(); super.paintComponent(g);
-            }
-        };
-        card.setOpaque(false);
-        card.setLayout(new GridBagLayout());
-        card.setBorder(new EmptyBorder(28, 28, 28, 28));
-        Dimension cardSize = new Dimension(460, 320);
-        card.setMaximumSize(cardSize); card.setPreferredSize(cardSize);
-
-        center.add(Box.createVerticalGlue());
-        center.add(card);
-        center.add(Box.createVerticalGlue());
+        // Login card
+        JPanel loginCard = createLoginCard();
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 10, 8, 10);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        container.add(loginCard, gbc);
 
-        JLabel title = new JLabel("VisionText Terminal");
-        title.setFont(new Font("Arial", Font.BOLD, 24));
-        title.setForeground(Theme.TEXT);
-        card.add(title, gbc);
+        add(container, BorderLayout.CENTER);
 
-        gbc.gridy++;
-        JLabel subtitle = new JLabel("Sign in to continue");
-        subtitle.setFont(new Font("Arial", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(90, 100, 115));
-        card.add(subtitle, gbc);
+        // Theme toggle button in top-right corner
+        add(createTopBar(), BorderLayout.NORTH);
+    }
 
-        gbc.gridwidth = 1;
-        gbc.gridy++; gbc.gridx = 0; gbc.anchor = GridBagConstraints.LINE_END;
-        JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setDisplayedMnemonic('E');
-        card.add(emailLabel, gbc);
+    private JPanel createTopBar() {
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setOpaque(false);
+        topBar.setBorder(new EmptyBorder(Theme.Spacing.MD, Theme.Spacing.MD, 0, Theme.Spacing.MD));
 
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.LINE_START;
-        emailField = makeTextField(24);
-        emailLabel.setLabelFor(emailField);
-        card.add(emailField, gbc);
+        themeToggleBtn = new ModernButton("🌙", ModernButton.Style.GHOST);
+        themeToggleBtn.setToolTipText("Toggle dark/light theme");
+        themeToggleBtn.setPreferredSize(new Dimension(40, 40));
+        themeToggleBtn.addActionListener(e -> toggleTheme());
 
-        gbc.gridy++; gbc.gridx = 0; gbc.anchor = GridBagConstraints.LINE_END;
-        JLabel passLabel = new JLabel("Password:");
-        passLabel.setDisplayedMnemonic('P');
-        card.add(passLabel, gbc);
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        rightPanel.setOpaque(false);
+        rightPanel.add(themeToggleBtn);
 
-        gbc.gridx = 1; gbc.anchor = GridBagConstraints.LINE_START;
-        passwordField = makePasswordField(24);
-        passLabel.setLabelFor(passwordField);
-        card.add(passwordField, gbc);
+        topBar.add(rightPanel, BorderLayout.EAST);
+        return topBar;
+    }
 
-        gbc.gridy++; gbc.gridx = 0; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        JPanel btnRow = new JPanel();
-        btnRow.setOpaque(false);
-        btnRow.setLayout(new BoxLayout(btnRow, BoxLayout.X_AXIS));
+    private JPanel createLoginCard() {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Theme.getSurfaceColor());
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.getBorderColor(), 1, true),
+            new EmptyBorder(Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL)
+        ));
 
-        AnimatedButton loginBtn = new AnimatedButton("Login");
-        AnimatedButton registerBtn = new AnimatedButton("Register");
-        Dimension btnSize = new Dimension(140, 44);
-        loginBtn.setPreferredSize(btnSize); loginBtn.setMaximumSize(btnSize);
-        registerBtn.setPreferredSize(btnSize); registerBtn.setMaximumSize(btnSize);
-        loginBtn.setToolTipText("Sign in (Enter)");
-        registerBtn.setToolTipText("Create a new account");
+        // Set rounded corners (this will be handled by FlatLaf)
+        card.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.LG);
 
-        btnRow.add(loginBtn); btnRow.add(Box.createHorizontalStrut(12)); btnRow.add(registerBtn);
-        card.add(btnRow, gbc);
+        Dimension cardSize = new Dimension(400, 480);
+        card.setPreferredSize(cardSize);
+        card.setMaximumSize(cardSize);
 
+        // Header
+        card.add(createHeader());
+        card.add(Box.createVerticalStrut(Theme.Spacing.XXL));
+
+        // Form
+        card.add(createForm());
+        card.add(Box.createVerticalStrut(Theme.Spacing.LG));
+
+        // Buttons
+        card.add(createButtons());
+
+        return card;
+    }
+
+    private JPanel createHeader() {
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setOpaque(false);
+        header.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // App icon
+        JLabel iconLabel = new JLabel("👁️");
+        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
+        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        header.add(iconLabel);
+
+        header.add(Box.createVerticalStrut(Theme.Spacing.MD));
+
+        // Title
+        JLabel title = new JLabel("VisionText");
+        title.setFont(Theme.Fonts.getFont("Inter", Font.BOLD, 28));
+        title.setForeground(Theme.getTextColor());
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        header.add(title);
+
+        header.add(Box.createVerticalStrut(Theme.Spacing.SM));
+
+        // Subtitle
+        JLabel subtitle = new JLabel("Sign in to extract text from images");
+        subtitle.setFont(Theme.Fonts.BODY);
+        subtitle.setForeground(Theme.getSecondaryTextColor());
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        header.add(subtitle);
+
+        return header;
+    }
+
+    private JPanel createForm() {
+        JPanel form = new JPanel();
+        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setOpaque(false);
+        form.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Email field
+        JLabel emailLabel = new JLabel("Email");
+        emailLabel.setFont(Theme.Fonts.BODY_MEDIUM);
+        emailLabel.setForeground(Theme.getTextColor());
+        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        emailField = createModernTextField("Enter your email");
+        emailField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        form.add(emailLabel);
+        form.add(Box.createVerticalStrut(Theme.Spacing.SM));
+        form.add(emailField);
+        form.add(Box.createVerticalStrut(Theme.Spacing.MD));
+
+        // Password field
+        JLabel passwordLabel = new JLabel("Password");
+        passwordLabel.setFont(Theme.Fonts.BODY_MEDIUM);
+        passwordLabel.setForeground(Theme.getTextColor());
+        passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        passwordField = createModernPasswordField("Enter your password");
+        passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        form.add(passwordLabel);
+        form.add(Box.createVerticalStrut(Theme.Spacing.SM));
+        form.add(passwordField);
+
+        return form;
+    }
+
+    private JTextField createModernTextField(String placeholder) {
+        JTextField field = new JTextField();
+        field.putClientProperty("JTextField.placeholderText", placeholder);
+        field.setFont(Theme.Fonts.BODY);
+        field.setPreferredSize(new Dimension(320, 44));
+        field.setMaximumSize(new Dimension(320, 44));
+
+        // Add focus effects
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                field.putClientProperty("JComponent.outline", "focus");
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                field.putClientProperty("JComponent.outline", null);
+            }
+        });
+
+        return field;
+    }
+
+    private JPasswordField createModernPasswordField(String placeholder) {
+        JPasswordField field = new JPasswordField();
+        field.putClientProperty("JTextField.placeholderText", placeholder);
+        field.setFont(Theme.Fonts.BODY);
+        field.setPreferredSize(new Dimension(320, 44));
+        field.setMaximumSize(new Dimension(320, 44));
+
+        // Add focus effects
+        field.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                field.putClientProperty("JComponent.outline", "focus");
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                field.putClientProperty("JComponent.outline", null);
+            }
+        });
+
+        return field;
+    }
+
+    private JPanel createButtons() {
+        JPanel buttons = new JPanel();
+        buttons.setLayout(new BoxLayout(buttons, BoxLayout.Y_AXIS));
+        buttons.setOpaque(false);
+        buttons.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Login button (primary)
+        loginBtn = new ModernButton("Sign In", ModernButton.Style.PRIMARY);
+        loginBtn.setPreferredSize(new Dimension(320, 44));
+        loginBtn.setMaximumSize(new Dimension(320, 44));
+        loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginBtn.addActionListener(this::onLogin);
+
+        buttons.add(loginBtn);
+        buttons.add(Box.createVerticalStrut(Theme.Spacing.MD));
+
+        // Register button (secondary)
+        registerBtn = new ModernButton("Create Account", ModernButton.Style.SECONDARY);
+        registerBtn.setPreferredSize(new Dimension(320, 44));
+        registerBtn.setMaximumSize(new Dimension(320, 44));
+        registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         registerBtn.addActionListener(this::onRegister);
 
-        // Enter submits login
-        Action loginAction = new AbstractAction(){ @Override public void actionPerformed(ActionEvent e){ onLogin(e); }};
-        emailField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "login");
-        emailField.getActionMap().put("login", loginAction);
-        passwordField.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "login");
-        passwordField.getActionMap().put("login", loginAction);
+        buttons.add(registerBtn);
+
+        // Setup keyboard shortcuts
+        setupKeyboardShortcuts();
+
+        return buttons;
     }
 
-    private JTextField makeTextField(int cols) {
-        JTextField tf = new JTextField(cols);
-        tf.setFont(Theme.FONT);
-        tf.setBorder(new CompoundBorder(
-                new LineBorder(new Color(210, 215, 222), 1, true),
-                new EmptyBorder(8, 10, 8, 10)
-        ));
-        tf.setBackground(Color.WHITE);
-        return tf;
+    private void setupKeyboardShortcuts() {
+        // Enter key triggers login
+        Action loginAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onLogin(e);
+            }
+        };
+
+        emailField.addActionListener(loginAction);
+        passwordField.addActionListener(loginAction);
+
+        // Focus management
+        emailField.addActionListener(e -> passwordField.requestFocus());
     }
 
-    private JPasswordField makePasswordField(int cols) {
-        JPasswordField pf = new JPasswordField(cols);
-        pf.setFont(Theme.FONT);
-        pf.setBorder(new CompoundBorder(
-                new LineBorder(new Color(210, 215, 222), 1, true),
-                new EmptyBorder(8, 10, 8, 10)
-        ));
-        pf.setBackground(Color.WHITE);
-        return pf;
+    private void toggleTheme() {
+        Theme.toggleTheme();
+        themeToggleBtn.setText(Theme.isDarkMode() ? "☀️" : "🌙");
+
+        // Update all components
+        SwingUtilities.updateComponentTreeUI(this);
+        mainApp.frame.repaint();
     }
 
     private void onLogin(ActionEvent e) {
         String email = emailField.getText().trim();
         String password = new String(passwordField.getPassword());
+
         if (email.isEmpty() || password.isEmpty()) {
             errorHandler.showError("Please enter both email and password.");
             return;
         }
-        boolean success = loginService.login(email, password);
-        if (success) {
-            mainApp.showDashboard(email);
-        } else {
-            errorHandler.showError("Login failed. Please check your credentials.");
-        }
+
+        // Disable buttons during login
+        setButtonsEnabled(false);
+
+        // Simulate async login (you can make this actually async if needed)
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                return loginService.login(email, password);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    boolean success = get();
+                    if (success) {
+                        mainApp.showDashboard(email);
+                    } else {
+                        errorHandler.showError("Login failed. Please check your credentials.");
+                    }
+                } catch (Exception ex) {
+                    errorHandler.showError("Login error: " + ex.getMessage());
+                } finally {
+                    setButtonsEnabled(true);
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void onRegister(ActionEvent e) {
         String email = emailField.getText().trim();
         String password = new String(passwordField.getPassword());
+
         if (email.isEmpty() || password.isEmpty()) {
             errorHandler.showError("Please enter both email and password.");
             return;
         }
-        boolean success = loginService.register(email, password);
-        if (success) {
-            mainApp.showDashboard(email);
-        } else {
-            errorHandler.showError("Registration failed. Email may already be in use.");
+
+        // Disable buttons during registration
+        setButtonsEnabled(false);
+
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                return loginService.register(email, password);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    boolean success = get();
+                    if (success) {
+                        mainApp.showDashboard(email);
+                    } else {
+                        errorHandler.showError("Registration failed. Email may already be in use or password is too weak.");
+                    }
+                } catch (Exception ex) {
+                    errorHandler.showError("Registration error: " + ex.getMessage());
+                } finally {
+                    setButtonsEnabled(true);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void setButtonsEnabled(boolean enabled) {
+        loginBtn.setEnabled(enabled);
+        registerBtn.setEnabled(enabled);
+        loginBtn.setText(enabled ? "Sign In" : "Signing in...");
+        registerBtn.setText(enabled ? "Create Account" : "Creating...");
+    }
+
+    public void refreshTheme() {
+        setBackground(Theme.getBackgroundColor());
+        SwingUtilities.invokeLater(() -> {
+            updateColors(this);
+            repaint();
+        });
+    }
+
+    private void updateColors(Component c) {
+        if (c instanceof JLabel) {
+            ((JLabel) c).setForeground(Theme.getTextColor());
+        }
+        if (c instanceof JPanel) {
+            JPanel p = (JPanel) c;
+            if (p.isOpaque()) p.setBackground(Theme.getBackgroundColor());
+        }
+        if (c instanceof Container) {
+            for (Component child : ((Container) c).getComponents()) updateColors(child);
         }
     }
 }

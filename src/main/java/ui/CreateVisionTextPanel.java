@@ -17,8 +17,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
-import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
-
 public class CreateVisionTextPanel extends JPanel {
 
     private final MainAppUI mainApp;
@@ -27,11 +25,12 @@ public class CreateVisionTextPanel extends JPanel {
     private final ErrorHandler errorHandler;
     private final String username;
 
-    private JLabel imageStatusLabel;
-    private FitImagePanel previewCanvas;   // <— replaces JLabel with icon
+    private JLabel statusLabel;
+    private ModernImagePreview previewPanel;
     private JTextArea outputArea;
     private File currentImage;
-    private final JPanel centerOverlay = new JPanel();
+    private JPanel loadingOverlay;
+    private ModernButton uploadBtn, pasteBtn, copyBtn, clearBtn, saveBtn, backBtn;
 
     public CreateVisionTextPanel(MainAppUI mainApp,
                                  OCRUseCase ocrUseCase,
@@ -47,129 +46,233 @@ public class CreateVisionTextPanel extends JPanel {
     }
 
     private void initUI() {
-        setLayout(new BorderLayout(0, 12));
-        setBackground(Theme.BG);
-        setBorder(new EmptyBorder(10, 0, 10, 0));
+        setLayout(new BorderLayout());
+        setBackground(Theme.getBackgroundColor());
+        setBorder(new EmptyBorder(Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG));
 
-        add(createHeaderPanel(), BorderLayout.NORTH);
-        add(createCenterPanel(), BorderLayout.CENTER);
-        add(createFooterPanel(), BorderLayout.SOUTH);
+        add(createHeader(), BorderLayout.NORTH);
+        add(createMainContent(), BorderLayout.CENTER);
+        add(createFooter(), BorderLayout.SOUTH);
 
-        bindShortcuts();
+        setupKeyboardShortcuts();
     }
 
-    private JComponent createHeaderPanel() {
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        header.setBorder(new EmptyBorder(0, 10, 0, 10));
+    private JPanel createHeader() {
+        JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        imageStatusLabel = new JLabel("No image selected");
-        imageStatusLabel.setFont(new Font("Arial", Font.BOLD, 13));
-        header.add(imageStatusLabel);
+        header.setBorder(new EmptyBorder(0, 0, Theme.Spacing.LG, 0));
+
+        // Title section
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+
+        JLabel title = new JLabel("🔍 Text Extraction");
+        title.setFont(Theme.Fonts.getFont("Inter", Font.BOLD, 24));
+        title.setForeground(Theme.getTextColor());
+
+        statusLabel = new JLabel("Upload an image or paste from clipboard to extract text");
+        statusLabel.setFont(Theme.Fonts.BODY);
+        statusLabel.setForeground(Theme.getSecondaryTextColor());
+
+        titlePanel.add(title);
+        titlePanel.add(Box.createVerticalStrut(Theme.Spacing.XS));
+        titlePanel.add(statusLabel);
+
+        header.add(titlePanel, BorderLayout.WEST);
+
         return header;
     }
 
-    private JComponent createCenterPanel() {
-        JPanel overlayContainer = new JPanel();
-        overlayContainer.setLayout(new OverlayLayout(overlayContainer));
-        overlayContainer.setOpaque(false);
+    private JPanel createMainContent() {
+        JPanel mainContent = new JPanel(new BorderLayout(Theme.Spacing.LG, 0));
+        mainContent.setOpaque(false);
 
-        JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
+        // Left side: Image preview (40%)
+        JPanel leftPanel = createImagePreviewPanel();
 
-        // LEFT: preview (25%)
-        JPanel previewPanel = new JPanel(new BorderLayout());
-        previewPanel.setOpaque(true);
-        previewPanel.setBackground(Color.WHITE);
-        previewPanel.setBorder(BorderFactory.createLineBorder(Theme.OUTLINE));
+        // Right side: Text output (60%)
+        JPanel rightPanel = createTextOutputPanel();
 
-        previewCanvas = new FitImagePanel();
-        previewCanvas.setBorder(new EmptyBorder(10, 10, 10, 10));
-        previewPanel.add(previewCanvas, BorderLayout.CENTER);
+        mainContent.add(leftPanel, BorderLayout.WEST);
+        mainContent.add(rightPanel, BorderLayout.CENTER);
 
+        // Loading overlay
+        loadingOverlay = createLoadingOverlay();
+
+        // Use OverlayLayout to stack loading over content
+        JPanel container = new JPanel();
+        container.setLayout(new OverlayLayout(container));
+        container.add(loadingOverlay);
+        container.add(mainContent);
+
+        return container;
+    }
+
+    private JPanel createImagePreviewPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setPreferredSize(new Dimension(400, 0));
+
+        // Preview area
+        previewPanel = new ModernImagePreview();
+        previewPanel.setPreferredSize(new Dimension(400, 300));
+        previewPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
+            new EmptyBorder(Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD)
+        ));
+        previewPanel.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.MD);
+
+        // Setup drag and drop
         new DropTarget(previewPanel, new DropTargetAdapter() {
-            @Override public void drop(DropTargetDropEvent dtde) { handleDrop(dtde); }
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                handleDrop(dtde);
+            }
         });
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1.0;
-        gbc.weightx = 0.25;
-        gbc.insets = new Insets(0, 10, 0, 5);
-        contentPanel.add(previewPanel, gbc);
+        panel.add(previewPanel, BorderLayout.CENTER);
 
-        // RIGHT: output (75%)
+        return panel;
+    }
+
+    private JPanel createTextOutputPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+
+        // Header for output area
+        JLabel outputLabel = new JLabel("📝 Extracted Text");
+        outputLabel.setFont(Theme.Fonts.getFont("Inter", Font.BOLD, 16));
+        outputLabel.setForeground(Theme.getTextColor());
+        outputLabel.setBorder(new EmptyBorder(0, 0, Theme.Spacing.SM, 0));
+
+        // Text area
         outputArea = new JTextArea();
         outputArea.setLineWrap(true);
         outputArea.setWrapStyleWord(true);
-        outputArea.setFont(new Font("Consolas", Font.PLAIN, 13));
-        outputArea.setMargin(new Insets(8, 8, 8, 8));
+        outputArea.setFont(Theme.Fonts.getFont("JetBrains Mono", Font.PLAIN, 13));
+        outputArea.setMargin(new Insets(Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD));
+        outputArea.setBackground(Theme.getSurfaceColor());
+        outputArea.setForeground(Theme.getTextColor());
+        outputArea.setBorder(null);
 
-        JScrollPane outputScrollPane = new JScrollPane(outputArea);
-        outputScrollPane.setBorder(BorderFactory.createLineBorder(Theme.OUTLINE));
+        // Custom placeholder text
+        outputArea.putClientProperty("JTextArea.placeholderText", "Extracted text will appear here...");
 
-        gbc.gridx = 1;
-        gbc.weightx = 0.75;
-        gbc.insets = new Insets(0, 5, 0, 10);
-        contentPanel.add(outputScrollPane, gbc);
+        JScrollPane scrollPane = new JScrollPane(outputArea);
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
+            new EmptyBorder(0, 0, 0, 0)
+        ));
+        scrollPane.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.MD);
 
-        overlayContainer.add(contentPanel);
+        panel.add(outputLabel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        // overlay
-        centerOverlay.setOpaque(true);
-        centerOverlay.setBackground(new Color(255, 255, 255, 180));
-        centerOverlay.setLayout(new GridBagLayout());
-        JLabel loading = new JLabel("Processing…");
-        loading.setFont(Theme.FONT_BOLD);
-        centerOverlay.add(loading);
-        centerOverlay.setVisible(false);
-        overlayContainer.add(centerOverlay);
-
-        return overlayContainer;
+        return panel;
     }
 
-    private JComponent createFooterPanel() {
-        AnimatedButton uploadBtn = new AnimatedButton("Upload Image");
-        AnimatedButton pasteBtn  = new AnimatedButton("Paste");
-        AnimatedButton copyBtn   = new AnimatedButton("Copy");
-        AnimatedButton clearBtn  = new AnimatedButton("Clear");
-        AnimatedButton saveBtn   = new AnimatedButton("Save as TXT");
-        AnimatedButton backBtn   = new AnimatedButton("Back to Dashboard");
+    private JPanel createLoadingOverlay() {
+        JPanel overlay = new JPanel(new GridBagLayout());
+        overlay.setBackground(new Color(Theme.getSurfaceColor().getRed(),
+                                      Theme.getSurfaceColor().getGreen(),
+                                      Theme.getSurfaceColor().getBlue(), 200));
+        overlay.setVisible(false);
 
-        Dimension btnSize = new Dimension(160, 44);
-        for (JButton b : new JButton[]{uploadBtn, pasteBtn, copyBtn, clearBtn, saveBtn}) {
-            b.setPreferredSize(btnSize);
-            b.setMaximumSize(btnSize);
+        JPanel loadingCard = new JPanel();
+        loadingCard.setLayout(new BoxLayout(loadingCard, BoxLayout.Y_AXIS));
+        loadingCard.setBackground(Theme.getSurfaceColor());
+        loadingCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
+            new EmptyBorder(Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG)
+        ));
+        loadingCard.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.LG);
+
+        JLabel loadingIcon = new JLabel("⏳");
+        loadingIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
+        loadingIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel loadingText = new JLabel("Extracting text from image...");
+        loadingText.setFont(Theme.Fonts.BODY_MEDIUM);
+        loadingText.setForeground(Theme.getTextColor());
+        loadingText.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        loadingCard.add(loadingIcon);
+        loadingCard.add(Box.createVerticalStrut(Theme.Spacing.SM));
+        loadingCard.add(loadingText);
+
+        overlay.add(loadingCard);
+        return overlay;
+    }
+
+    private JPanel createFooter() {
+        JPanel footer = new JPanel();
+        footer.setOpaque(false);
+        footer.setLayout(new BorderLayout());
+        footer.setBorder(new EmptyBorder(Theme.Spacing.LG, 0, 0, 0));
+
+        // Action buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, Theme.Spacing.SM, 0));
+        buttonPanel.setOpaque(false);
+
+        uploadBtn = new ModernButton("📁 Upload Image", ModernButton.Style.PRIMARY);
+        pasteBtn = new ModernButton("📋 Paste", ModernButton.Style.SECONDARY);
+        copyBtn = new ModernButton("📄 Copy Text", ModernButton.Style.SECONDARY);
+        clearBtn = new ModernButton("🗑️ Clear", ModernButton.Style.GHOST);
+        saveBtn = new ModernButton("💾 Save as TXT", ModernButton.Style.SECONDARY);
+
+        Dimension btnSize = new Dimension(140, 40);
+        for (ModernButton btn : new ModernButton[]{uploadBtn, pasteBtn, copyBtn, clearBtn, saveBtn}) {
+            btn.setPreferredSize(btnSize);
         }
-        backBtn.setPreferredSize(new Dimension(220, 44));
-        backBtn.setMaximumSize(new Dimension(220, 44));
 
+        // Wire up actions
         uploadBtn.addActionListener(this::onUpload);
         pasteBtn.addActionListener(e -> pasteFromClipboard());
         copyBtn.addActionListener(e -> copyToClipboard());
-        clearBtn.addActionListener(e -> { outputArea.setText(""); Toast.show(this, "Cleared"); });
+        clearBtn.addActionListener(e -> clearOutput());
         saveBtn.addActionListener(this::onSave);
-        backBtn.addActionListener(e -> mainApp.showDashboard(mainApp.getCurrentUser()));
 
-        JPanel footer = new JPanel();
-        footer.setOpaque(false);
-        footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
-        footer.setBorder(new EmptyBorder(10, 10, 0, 10)); // align with boxes
-        footer.add(Box.createHorizontalGlue());
-        footer.add(uploadBtn); footer.add(Box.createHorizontalStrut(10));
-        footer.add(pasteBtn);  footer.add(Box.createHorizontalStrut(10));
-        footer.add(copyBtn);   footer.add(Box.createHorizontalStrut(10));
-        footer.add(clearBtn);  footer.add(Box.createHorizontalStrut(10));
-        footer.add(saveBtn);   footer.add(Box.createHorizontalStrut(12));
-        footer.add(backBtn);
-        footer.add(Box.createHorizontalGlue());
+        buttonPanel.add(uploadBtn);
+        buttonPanel.add(pasteBtn);
+        buttonPanel.add(copyBtn);
+        buttonPanel.add(clearBtn);
+        buttonPanel.add(saveBtn);
+
+        // Back button
+        JPanel backPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        backPanel.setOpaque(false);
+
+        backBtn = new ModernButton("← Back to Dashboard", ModernButton.Style.GHOST);
+        backBtn.addActionListener(e -> mainApp.showDashboard(username));
+        backPanel.add(backBtn);
+
+        footer.add(backPanel, BorderLayout.WEST);
+        footer.add(buttonPanel, BorderLayout.CENTER);
+
         return footer;
     }
 
-    // --------- helpers ----------
-    private void bindShortcuts() {
-        bindShortcut(this, "control C", "copy", e -> copyToClipboard());
-        bindShortcut(this, "control V", "paste", e -> pasteFromClipboard());
+    private void setupKeyboardShortcuts() {
+        // Ctrl+V for paste
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke("control V"), "paste");
+        getActionMap().put("paste", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pasteFromClipboard();
+            }
+        });
+
+        // Ctrl+C for copy
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+            KeyStroke.getKeyStroke("control C"), "copy");
+        getActionMap().put("copy", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                copyToClipboard();
+            }
+        });
     }
 
     private void handleDrop(DropTargetDropEvent dtde) {
@@ -179,177 +282,229 @@ public class CreateVisionTextPanel extends JPanel {
             List<File> files = (List<File>) dtde.getTransferable()
                     .getTransferData(DataFlavor.javaFileListFlavor);
             if (!files.isEmpty()) {
-                currentImage = files.get(0);
-                imageStatusLabel.setText("Selected: " + currentImage.getName());
-                setPreviewImage(currentImage);
-                runOCR(currentImage);
+                File file = files.get(0);
+                loadImage(file);
             }
         } catch (Exception ex) {
             errorHandler.showError("Failed to drop file: " + ex.getMessage(), ex);
         }
     }
 
-    private static void bindShortcut(JComponent c, String stroke, String name,
-                                     java.awt.event.ActionListener listener) {
-        c.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(stroke), name);
-        c.getActionMap().put(name, new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) { listener.actionPerformed(e); }
-        });
+    private void onUpload(ActionEvent e) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Image files", "jpg", "jpeg", "png", "bmp", "gif"));
+
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            loadImage(chooser.getSelectedFile());
+        }
     }
 
-    private void copyToClipboard() {
-        String t = outputArea.getText();
-        if (t == null || t.trim().isEmpty()) { Toast.show(this, "Nothing to copy"); return; }
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(t), null);
-        Toast.show(this, "Copied");
+    private void loadImage(File imageFile) {
+        currentImage = imageFile;
+        statusLabel.setText("Processing: " + imageFile.getName());
+        previewPanel.setImage(imageFile);
+        runOCR(imageFile);
     }
 
     private void pasteFromClipboard() {
         try {
-            Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
-            Transferable tr = cb.getContents(null);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            Transferable transferable = clipboard.getContents(null);
 
-            if (tr.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-                Image img = (Image) tr.getTransferData(DataFlavor.imageFlavor);
-                if (img != null) {
-                    File tmp = writeImageToTemp(img);
-                    currentImage = tmp;
-                    imageStatusLabel.setText("Pasted image");
-                    setPreviewImage(tmp);
-                    runOCR(tmp);
-                    return;
+            if (transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+                Image image = (Image) transferable.getTransferData(DataFlavor.imageFlavor);
+                File tempFile = createTempImageFile(image);
+                loadImage(tempFile);
+            } else if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                String text = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+                if (outputArea.getText().isEmpty()) {
+                    outputArea.setText(text);
+                } else {
+                    outputArea.replaceSelection(text);
                 }
+                Toast.show(this, "Text pasted");
+            } else {
+                Toast.show(this, "No image or text found in clipboard");
             }
-            if (tr.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-                String s = (String) tr.getTransferData(DataFlavor.stringFlavor);
-                if (s != null && !s.isEmpty()) {
-                    if (outputArea.getText().isEmpty()) outputArea.setText(s);
-                    else outputArea.replaceSelection(s);
-                    Toast.show(this, "Pasted text");
-                    return;
-                }
-            }
-            Toast.show(this, "Nothing to paste");
         } catch (Exception ex) {
             errorHandler.showError("Paste failed: " + ex.getMessage(), ex);
         }
     }
 
-    private File writeImageToTemp(Image image) throws Exception {
-        int w = image.getWidth(null), h = image.getHeight(null);
-        if (w <= 0 || h <= 0) throw new IllegalArgumentException("Cannot process an empty image.");
-        BufferedImage bi = new BufferedImage(w, h, TYPE_INT_ARGB);
-        Graphics2D g2 = bi.createGraphics();
+    private File createTempImageFile(Image image) throws Exception {
+        BufferedImage bufferedImage = new BufferedImage(
+            image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = bufferedImage.createGraphics();
         g2.drawImage(image, 0, 0, null);
         g2.dispose();
-        File tmp = File.createTempFile("visiontext_clip_", ".png");
-        javax.imageio.ImageIO.write(bi, "png", tmp);
-        tmp.deleteOnExit();
-        return tmp;
+
+        File tempFile = File.createTempFile("visiontext_", ".png");
+        javax.imageio.ImageIO.write(bufferedImage, "png", tempFile);
+        tempFile.deleteOnExit();
+        return tempFile;
     }
 
-    /** Load the image and paint it into the fixed preview box (no layout changes). */
-    private void setPreviewImage(File f) {
-        try {
-            ImageIcon icon = new ImageIcon(f.getAbsolutePath());
-            previewCanvas.setImage(icon.getImage());
-            previewCanvas.repaint();
-        } catch (Exception ex) {
-            previewCanvas.setImage(null);
-            previewCanvas.repaint();
-            errorHandler.showError("Could not display preview: " + ex.getMessage(), ex);
+    private void copyToClipboard() {
+        String text = outputArea.getText();
+        if (text == null || text.trim().isEmpty()) {
+            Toast.show(this, "No text to copy");
+            return;
         }
+
+        Toolkit.getDefaultToolkit().getSystemClipboard()
+                .setContents(new StringSelection(text), null);
+        Toast.show(this, "Text copied to clipboard");
     }
 
-    private void onUpload(ActionEvent e) {
-        JFileChooser chooser = new JFileChooser();
-        int res = chooser.showOpenDialog(this);
-        if (res == JFileChooser.APPROVE_OPTION) {
-            currentImage = chooser.getSelectedFile();
-            imageStatusLabel.setText("Selected: " + currentImage.getName());
-            setPreviewImage(currentImage);
-            runOCR(currentImage);
-        }
+    private void clearOutput() {
+        outputArea.setText("");
+        previewPanel.setImage((File) null);
+        currentImage = null;
+        statusLabel.setText("Upload an image or paste from clipboard to extract text");
+        Toast.show(this, "Cleared");
     }
 
-    private void runOCR(File image) {
-        setBusy(true);
-        new SwingWorker<String, Void>() {
-            @Override protected String doInBackground() throws Exception { return ocrUseCase.runOCR(image); }
-            @Override protected void done() {
-                setBusy(false);
+    private void runOCR(File imageFile) {
+        setProcessing(true);
+
+        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                return ocrUseCase.runOCR(imageFile);
+            }
+
+            @Override
+            protected void done() {
+                setProcessing(false);
                 try {
                     String text = get();
                     outputArea.setText(text == null ? "" : text);
+
                     if (text != null && !text.isBlank()) {
-                        historyService.addHistory(username, image.getName(), text);
-                        Toast.show(CreateVisionTextPanel.this, "Added to history");
+                        historyService.addHistory(username, imageFile.getName(), text);
+                        statusLabel.setText("✅ Text extracted successfully from " + imageFile.getName());
+                        Toast.show(CreateVisionTextPanel.this, "Text extracted and saved to history");
+                    } else {
+                        statusLabel.setText("⚠️ No text found in " + imageFile.getName());
                     }
                 } catch (Exception ex) {
+                    statusLabel.setText("❌ Failed to process " + imageFile.getName());
                     errorHandler.showError("Failed to process image: " + ex.getMessage(), ex);
                 }
             }
-        }.execute();
+        };
+        worker.execute();
     }
 
-    private void setBusy(boolean busy) { centerOverlay.setVisible(busy); }
+    private void setProcessing(boolean processing) {
+        loadingOverlay.setVisible(processing);
+        uploadBtn.setEnabled(!processing);
+        pasteBtn.setEnabled(!processing);
+
+        if (processing) {
+            uploadBtn.setText("🔄 Processing...");
+        } else {
+            uploadBtn.setText("📁 Upload Image");
+        }
+    }
 
     private void onSave(ActionEvent e) {
         String text = outputArea.getText();
         if (text.trim().isEmpty()) {
-            errorHandler.showError("Nothing to save—OCR output is empty.");
+            errorHandler.showError("Nothing to save—text area is empty.");
             return;
         }
+
         JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new File("visiontext.txt"));
+        chooser.setSelectedFile(new File("extracted_text.txt"));
+
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (FileWriter fw = new FileWriter(chooser.getSelectedFile())) {
-                fw.write(text);
-                Toast.show(this, "Saved");
+            try (FileWriter writer = new FileWriter(chooser.getSelectedFile())) {
+                writer.write(text);
+                Toast.show(this, "File saved successfully");
             } catch (Exception ex) {
                 errorHandler.showError("Failed to save file: " + ex.getMessage(), ex);
             }
         }
     }
 
-    /* ============================================================
-       A fixed-size image component that always paints the image
-       scaled to fit inside the available bounds (keeps aspect ratio)
-       without affecting layout sizes.
-       ============================================================ */
-    private static class FitImagePanel extends JPanel {
+    public void refreshTheme() {
+        setBackground(Theme.getBackgroundColor());
+        if (outputArea != null) {
+            outputArea.setBackground(Theme.getSurfaceColor());
+            outputArea.setForeground(Theme.getTextColor());
+        }
+        if (loadingOverlay != null) {
+            loadingOverlay.setBackground(new Color(Theme.getSurfaceColor().getRed(),
+                    Theme.getSurfaceColor().getGreen(),
+                    Theme.getSurfaceColor().getBlue(), 200));
+        }
+        revalidate();
+        repaint();
+    }
+
+    // Custom image preview component
+    private static class ModernImagePreview extends JPanel {
         private Image image;
 
-        public void setImage(Image img) { this.image = img; }
+        public void setImage(File imageFile) {
+            if (imageFile != null) {
+                try {
+                    this.image = new ImageIcon(imageFile.getAbsolutePath()).getImage();
+                } catch (Exception ex) {
+                    this.image = null;
+                }
+            } else {
+                this.image = null;
+            }
+            repaint();
+        }
 
-        @Override protected void paintComponent(Graphics g) {
+        @Override
+        protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            int w = getWidth(), h = getHeight();
+            int width = getWidth();
+            int height = getHeight();
 
             if (image == null) {
-                // hint text (same as before)
-                g2.setColor(new Color(0,0,0,60));
-                String msg = "Drop image";
-                FontMetrics fm = g2.getFontMetrics();
-                int tx = (w - fm.stringWidth(msg)) / 2;
-                int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
-                g2.drawString(msg, tx, ty);
+                // Draw drop zone
+                g2.setColor(Theme.getSecondaryTextColor());
+                g2.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{8, 8}, 0));
+                g2.drawRoundRect(10, 10, width - 20, height - 20, Theme.Radius.MD, Theme.Radius.MD);
+
+                // Drop zone text
+                String[] lines = {"📷", "Drop image here", "or click Upload"};
+                g2.setColor(Theme.getSecondaryTextColor());
+
+                for (int i = 0; i < lines.length; i++) {
+                    Font font = i == 0 ? new Font("Segoe UI Emoji", Font.PLAIN, 32) : Theme.Fonts.BODY;
+                    g2.setFont(font);
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = (width - fm.stringWidth(lines[i])) / 2;
+                    int y = height / 2 - 20 + (i * 25);
+                    g2.drawString(lines[i], x, y);
+                }
             } else {
-                int iw = image.getWidth(null);
-                int ih = image.getHeight(null);
-                if (iw > 0 && ih > 0) {
-                    double scale = Math.min((double) w / iw, (double) h / ih);
-                    int dw = (int) Math.round(iw * scale);
-                    int dh = (int) Math.round(ih * scale);
-                    int x = (w - dw) / 2;
-                    int y = (h - dh) / 2;
-                    g2.drawImage(image, x, y, dw, dh, null);
+                // Draw image scaled to fit
+                int imgWidth = image.getWidth(null);
+                int imgHeight = image.getHeight(null);
+
+                if (imgWidth > 0 && imgHeight > 0) {
+                    double scale = Math.min((double) (width - 20) / imgWidth, (double) (height - 20) / imgHeight);
+                    int scaledWidth = (int) (imgWidth * scale);
+                    int scaledHeight = (int) (imgHeight * scale);
+                    int x = (width - scaledWidth) / 2;
+                    int y = (height - scaledHeight) / 2;
+
+                    g2.drawImage(image, x, y, scaledWidth, scaledHeight, null);
                 }
             }
+
             g2.dispose();
         }
     }

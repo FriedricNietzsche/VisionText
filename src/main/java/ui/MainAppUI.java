@@ -10,6 +10,7 @@ import infrastructure.FirebaseHistoryRepository;
 import shared.Config;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class MainAppUI {
     private CardLayout cardLayout;
@@ -17,12 +18,12 @@ public class MainAppUI {
     private LoginPanel loginPanel;
     private DashboardPanel dashboardPanel;
     private HistoryPanel historyPanel;
-    private JFrame frame;
+    public JFrame frame;
     private final LoginService loginService;
     private final OCRUseCase ocrUseCase;
     private final HistoryService historyService;
     private final ErrorHandler errorHandler;
-    private String username ;
+    private String username;
 
     public MainAppUI() {
         Config.load();
@@ -40,60 +41,110 @@ public class MainAppUI {
 
     private void initUI() {
         String LOG_IN = "login";
-        frame = new JFrame("VisionText - OCR App");
+
+        frame = new JFrame("VisionText");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //The size is now adjustable
-        frame.setPreferredSize(new Dimension(800, 600));
+        frame.setPreferredSize(new Dimension(1200, 800));
+        frame.setMinimumSize(new Dimension(900, 600));
+
+        // Set modern icon and window properties
+        frame.setIconImage(createAppIcon());
+        frame.setLocationRelativeTo(null);
+
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
+        mainPanel.setBackground(Theme.getBackgroundColor());
+
         // Initialize panels
-        loginPanel = new LoginPanel(this,loginService,errorHandler);
-        // Don't create dashboardPanel here - create it when user logs in
+        loginPanel = new LoginPanel(this, loginService, errorHandler);
 
         // Add panels to card layout
         mainPanel.add(loginPanel, LOG_IN);
         frame.add(mainPanel);
         cardLayout.show(mainPanel, LOG_IN);
+
         frame.setVisible(true);
         frame.pack();
-        frame.repaint();
+    }
+
+    private Image createAppIcon() {
+        // Create a simple modern app icon
+        BufferedImage icon = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = icon.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Background circle
+        g2.setColor(Theme.getPrimaryColor());
+        g2.fillRoundRect(8, 8, 48, 48, 12, 12);
+
+        // Eye icon (representing vision)
+        g2.setColor(Color.WHITE);
+        g2.fillOval(20, 24, 24, 16);
+        g2.setColor(Theme.getPrimaryColor());
+        g2.fillOval(28, 28, 8, 8);
+
+        g2.dispose();
+        return icon;
     }
 
     public void showLoginScreen() {
         String LOG_IN = "login";
-        loginPanel = new LoginPanel(this,loginService,errorHandler);
-        mainPanel.remove(loginPanel);
-        mainPanel.add(loginPanel,LOG_IN);
-        cardLayout.show(mainPanel,LOG_IN);
-        frame.setTitle("VisionText - OCR App");
-        frame.pack();
+        if (loginPanel != null) {
+            mainPanel.remove(loginPanel);
+        }
+        loginPanel = new LoginPanel(this, loginService, errorHandler);
+        mainPanel.add(loginPanel, LOG_IN);
+        cardLayout.show(mainPanel, LOG_IN);
+        frame.setTitle("VisionText");
         frame.repaint();
-
     }
 
     public void showDashboard(String username) {
         String DASHBOARD = "dashboard";
         this.username = username;
-        dashboardPanel = new DashboardPanel(this,ocrUseCase,historyService,loginService,errorHandler,username);
-        mainPanel.remove(dashboardPanel);
-        mainPanel.add(dashboardPanel,DASHBOARD);
+
+        if (dashboardPanel != null) {
+            mainPanel.remove(dashboardPanel);
+        }
+        dashboardPanel = new DashboardPanel(this, ocrUseCase, historyService, loginService, errorHandler, username);
+        mainPanel.add(dashboardPanel, DASHBOARD);
         cardLayout.show(mainPanel, DASHBOARD);
-        frame.setTitle("VisionText  Welcome" +" " + username);
+        frame.setTitle("VisionText - Welcome, " + username.split("@")[0]);
+    refreshTheme();
     }
 
     public void showHistory(String username) {
-        historyPanel = new HistoryPanel(this,historyService,loginService,errorHandler,username);
+        if (historyPanel != null) {
+            mainPanel.remove(historyPanel);
+        }
+        historyPanel = new HistoryPanel(this, historyService, loginService, errorHandler, username);
+        mainPanel.add(historyPanel, "history");
         cardLayout.show(mainPanel, "history");
         frame.setTitle("VisionText - History");
     }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            Theme.apply();
+            // Apply modern theme before creating UI
+            Theme.applyModernTheme();
             new MainAppUI();
         });
-
     }
+
     public String getCurrentUser() {
         return this.username;
+    }
+
+    // Refresh backgrounds and panel-specific themed components after a theme toggle
+    public void refreshTheme() {
+        if (mainPanel != null) mainPanel.setBackground(Theme.getBackgroundColor());
+    if (loginPanel != null) loginPanel.refreshTheme();
+        if (dashboardPanel != null) dashboardPanel.refreshTheme();
+        if (historyPanel != null) historyPanel.refreshTheme();
+        if (frame != null) {
+            frame.getContentPane().setBackground(Theme.getBackgroundColor());
+            SwingUtilities.updateComponentTreeUI(frame);
+            frame.repaint();
+        }
     }
 }
