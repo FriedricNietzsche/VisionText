@@ -187,10 +187,11 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         titleLabel.setForeground(Theme.getTextColor());
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel descLabel = new JLabel("<html><div style='text-align: center; width: 200px;'>" + description + "</div></html>");
-        descLabel.setFont(Theme.Fonts.BODY);
-        descLabel.setForeground(Theme.getSecondaryTextColor());
-        descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    JLabel descLabel = new JLabel("<html><div style='text-align:center; margin:0 auto;'><p style='margin:0;'>" + description + "</p></div></html>");
+    descLabel.setFont(Theme.Fonts.BODY);
+    descLabel.setForeground(Theme.getSecondaryTextColor());
+    descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    descLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createVerticalStrut(Theme.Spacing.SM));
