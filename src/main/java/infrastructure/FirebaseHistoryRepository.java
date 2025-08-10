@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static shared.Config.getFirebaseRealTmeDBURL;
-import static shared.FirebaseUtil.get;
-import static shared.FirebaseUtil.post;
-import static shared.FirebaseUtil.delete;
+import static shared.FirebaseUtil.*;
 
 public class FirebaseHistoryRepository implements HistoryRepository {
     private final Gson gson;
@@ -77,7 +75,7 @@ public class FirebaseHistoryRepository implements HistoryRepository {
         List<String> historyList = new ArrayList<>();
 
         try {
-            String jsonResponse = get(url);
+            String jsonResponse = shared.FirebaseUtil.get(url);
 
             if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
                 // no history yet
@@ -107,8 +105,7 @@ public class FirebaseHistoryRepository implements HistoryRepository {
                 historyList.add(firebaseKey + "|||" + timestamp + "|||" + displayString);
             }
         } catch (Exception e) {
-            System.err.println("Error fetching history: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Error fetching history: " + e.getMessage(), e);
         }
         return historyList;
     }
@@ -131,7 +128,7 @@ public class FirebaseHistoryRepository implements HistoryRepository {
         String encodedUsername = encodeUsername(username);
         String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
         try {
-            String jsonResponse = get(url);
+            String jsonResponse = shared.FirebaseUtil.get(url);
             if (jsonResponse == null || jsonResponse.isEmpty() || "null".equals(jsonResponse)) {
                 return null;
             }

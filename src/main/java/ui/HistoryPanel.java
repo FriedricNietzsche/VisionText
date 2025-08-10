@@ -2,7 +2,6 @@ package ui;
 
 import application.HistoryService;
 import application.LoginService;
-import ui.AnimatedButton;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class HistoryPanel extends JPanel {
+public class HistoryPanel extends JPanel implements ThemeAware {
     private final MainAppUI mainApp;
     private final HistoryService historyService;
     private final LoginService loginService;
@@ -35,20 +34,21 @@ public class HistoryPanel extends JPanel {
         this.errorHandler = errorHandler;
         this.username = username;
         initUI();
+    Theme.addListener(this);
     }
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(Theme.BG);
+        setBackground(Theme.getBackgroundColor()); // Fixed: use modern theme method
         setBorder(new EmptyBorder(16, 16, 16, 16));
 
         // Top controls
         JPanel top = new JPanel(new BorderLayout(8, 0));
         top.setOpaque(false);
 
-        JLabel title = new JLabel("History");
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-        title.setForeground(Theme.TEXT);
+        JLabel title = new JLabel("📚 History");
+        title.setFont(Theme.Fonts.HEADING); // Fixed: use modern font
+        title.setForeground(Theme.getTextColor()); // Fixed: use modern theme method
         top.add(title, BorderLayout.WEST);
 
         JPanel right = new JPanel();
@@ -57,9 +57,11 @@ public class HistoryPanel extends JPanel {
 
         searchField = new JTextField(18);
         searchField.putClientProperty("JTextField.placeholderText", "Search...");
+        searchField.setFont(Theme.Fonts.BODY); // Fixed: use modern font
 
         // Sorting options now include date sorts
         sortBox = new JComboBox<>(new String[]{"Newest", "Oldest", "A → Z", "Z → A"});
+        sortBox.setFont(Theme.Fonts.BODY); // Fixed: use modern font
 
         right.add(searchField);
         right.add(Box.createHorizontalStrut(8));
@@ -75,6 +77,7 @@ public class HistoryPanel extends JPanel {
         historyList.setFixedCellHeight(44);
         historyList.setBorder(new EmptyBorder(6, 6, 6, 6));
         historyList.setCellRenderer(new Renderer());
+        historyList.setBackground(Theme.getSurfaceColor()); // Fixed: use modern theme method
 
         historyList.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) {
@@ -84,9 +87,13 @@ public class HistoryPanel extends JPanel {
 
         // Right-click menu (View / Download / Delete)
         JPopupMenu menu = new JPopupMenu();
-        JMenuItem miView = new JMenuItem("View");
-        JMenuItem miDownload = new JMenuItem("Download");
-        JMenuItem miDelete = new JMenuItem("Delete");
+        JMenuItem miView = new JMenuItem("👁️ View");
+        JMenuItem miDownload = new JMenuItem("💾 Download");
+        JMenuItem miDelete = new JMenuItem("🗑️ Delete");
+
+        miView.setFont(Theme.Fonts.BODY);
+        miDownload.setFont(Theme.Fonts.BODY);
+        miDelete.setFont(Theme.Fonts.BODY);
 
         miView.addActionListener(this::onView);
         miDownload.addActionListener(this::onDownload);
@@ -107,19 +114,20 @@ public class HistoryPanel extends JPanel {
 
         JScrollPane sp = new JScrollPane(historyList);
         sp.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.OUTLINE),
+                BorderFactory.createLineBorder(Theme.getBorderColor()), // Fixed: use modern theme method
                 new EmptyBorder(6, 6, 6, 6)
         ));
+        sp.setBackground(Theme.getSurfaceColor()); // Fixed: use modern theme method
         add(sp, BorderLayout.CENTER);
 
-        // Footer buttons
-        AnimatedButton viewBtn = new AnimatedButton("View");
-        AnimatedButton downloadBtn = new AnimatedButton("Download");
-        AnimatedButton deleteBtn = new AnimatedButton("Delete");
-        AnimatedButton backBtn = new AnimatedButton("Back to Dashboard");
+        // Footer buttons - Fixed: use ModernButton instead of AnimatedButton
+        ModernButton viewBtn = new ModernButton("👁️ View", ModernButton.Style.PRIMARY);
+        ModernButton downloadBtn = new ModernButton("💾 Download", ModernButton.Style.SECONDARY);
+        ModernButton deleteBtn = new ModernButton("🗑️ Delete", ModernButton.Style.DANGER);
+        ModernButton backBtn = new ModernButton("← Back to Dashboard", ModernButton.Style.GHOST);
 
         Dimension btnSize = new Dimension(160, 40);
-        for (AnimatedButton b : new AnimatedButton[]{viewBtn, downloadBtn, deleteBtn, backBtn}) {
+        for (ModernButton b : new ModernButton[]{viewBtn, downloadBtn, deleteBtn, backBtn}) {
             b.setPreferredSize(btnSize);
             b.setMaximumSize(btnSize);
         }
@@ -197,10 +205,41 @@ public class HistoryPanel extends JPanel {
         for (String s : filteredDisplays) model.addElement(s);
     }
 
+    public void refreshTheme() {
+        setBackground(Theme.getBackgroundColor());
+        if (historyList != null) {
+            historyList.setBackground(Theme.getSurfaceColor());
+            historyList.repaint();
+        }
+        SwingUtilities.invokeLater(() -> {
+            for (Component c : getComponents()) updateComponentColors(c);
+            repaint();
+        });
+    }
+
+    @Override
+    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
+
+    private void updateComponentColors(Component c) {
+        if (c instanceof JLabel) {
+            c.setForeground(Theme.getTextColor());
+        }
+        if (c instanceof JPanel) {
+            JPanel p = (JPanel) c;
+            if (p.isOpaque()) p.setBackground(Theme.getBackgroundColor());
+        }
+        if (c instanceof JScrollPane) {
+            c.setBackground(Theme.getSurfaceColor());
+        }
+        if (c instanceof Container) {
+            for (Component child : ((Container) c).getComponents()) updateComponentColors(child);
+        }
+    }
+
     private void onView(ActionEvent e) {
         String display = historyList.getSelectedValue();
         if (display == null || !historyList.isEnabled()) {
-            errorHandler.showError("Select a history item to view.");
+            Toast.show(this, "Please select a history item to view");
             return;
         }
         String original = findOriginalByDisplay(display);
@@ -214,9 +253,14 @@ public class HistoryPanel extends JPanel {
             area.setLineWrap(true);
             area.setWrapStyleWord(true);
             area.setEditable(false);
+            area.setFont(Theme.Fonts.CODE); // Fixed: use modern font
+            area.setBackground(Theme.getSurfaceColor()); // Fixed: use modern theme
+            area.setForeground(Theme.getTextColor()); // Fixed: use modern theme
+
             JScrollPane sc = new JScrollPane(area);
             sc.setPreferredSize(new Dimension(700, 450));
-            JOptionPane.showMessageDialog(this, sc, "History Item", JOptionPane.INFORMATION_MESSAGE);
+            sc.setBorder(BorderFactory.createLineBorder(Theme.getBorderColor())); // Fixed: use modern theme
+            JOptionPane.showMessageDialog(this, sc, "📄 History Item", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             errorHandler.showError("Failed to load item.", ex);
         }
@@ -225,7 +269,7 @@ public class HistoryPanel extends JPanel {
     private void onDownload(ActionEvent e) {
         String display = historyList.getSelectedValue();
         if (display == null || !historyList.isEnabled()) {
-            errorHandler.showError("Select a history item to download.");
+            Toast.show(this, "Please select a history item to download");
             return;
         }
         String original = findOriginalByDisplay(display);
@@ -241,7 +285,7 @@ public class HistoryPanel extends JPanel {
                 try (java.io.FileWriter fw = new java.io.FileWriter(chooser.getSelectedFile())) {
                     fw.write(text);
                 }
-                Toast.show(this, "Saved");
+                Toast.show(this, "File saved successfully");
             }
         } catch (Exception ex) {
             errorHandler.showError("Failed to save file: " + ex.getMessage(), ex);
@@ -251,7 +295,7 @@ public class HistoryPanel extends JPanel {
     private void onDelete(ActionEvent e) {
         String display = historyList.getSelectedValue();
         if (display == null || !historyList.isEnabled()) {
-            errorHandler.showError("Select a history item to delete.");
+            Toast.show(this, "Please select a history item to delete");
             return;
         }
         String original = findOriginalByDisplay(display);
@@ -270,10 +314,8 @@ public class HistoryPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            // Make sure your HistoryService has this method.
-            // If your method is named deleteHistoryItem, just change this call.
             historyService.deleteHistory(username, original);
-            Toast.show(this, "Deleted");
+            Toast.show(this, "Item deleted successfully");
             loadHistory();
         } catch (Exception ex) {
             errorHandler.showError("Failed to delete item: " + ex.getMessage(), ex);
@@ -320,17 +362,23 @@ public class HistoryPanel extends JPanel {
 
     /** Striped rows + selection coloring. */
     private static class Renderer extends DefaultListCellRenderer {
-        private static final Color EVEN = new Color(252, 253, 255);
-        private static final Color ODD  = new Color(244, 247, 252);
-        private static final Color SELECT_BG = new Color(210, 230, 255);
-
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
             JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             c.setBorder(new EmptyBorder(8, 12, 8, 12));
-            c.setForeground(Theme.TEXT);
-            c.setBackground(isSelected ? SELECT_BG : (index % 2 == 0 ? EVEN : ODD));
+            c.setFont(Theme.Fonts.BODY);
+
+            if (isSelected) {
+                c.setForeground(Color.WHITE);
+                c.setBackground(Theme.getPrimaryColor());
+            } else {
+                c.setForeground(Theme.getTextColor());
+                c.setBackground(index % 2 == 0 ? Theme.getSurfaceColor() :
+                    new Color(Theme.getSurfaceColor().getRed() - 5,
+                             Theme.getSurfaceColor().getGreen() - 5,
+                             Theme.getSurfaceColor().getBlue() - 5));
+            }
             return c;
         }
     }

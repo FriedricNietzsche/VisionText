@@ -1,60 +1,114 @@
-# VisionText
+# VisionText – OCR Text Extractor with Login & History
 
-VisionText is a Java Swing application that allows users to extract text from images using the OCR.space API, manage their conversion history, and authenticate using Firebase Authentication. The app is designed with Clean Architecture and SOLID principles in mind.
+## Description
+VisionText is a Java Swing desktop application that allows users to securely log in, upload images, and extract text using the OCR.space API. Extracted text can be copied or saved for later, and a history of uploads is stored in Firebase Firestore.
+
+---
 
 ## Features
+- **Secure Authentication** – Firebase Authentication for login/signup
+- **Image Upload** – Drag-and-drop or file picker
+- **OCR Processing** – OCR.space API for text extraction
+- **History Tracking** – View and manage recent uploads
+- **Copy/Save Text** – Quickly copy results or store them for later
+- **Cross-Platform** – Runs on any OS with Java installed
 
-- **User Management**: Register, login, and logout with Firebase Authentication.
-- **OCR Text Extraction**: Upload images (JPG, PNG), extract text using OCR.space, and edit the result.
-- **History**: Save and view conversion history, including original filename, extracted text, and timestamp, stored in Firebase Firestore.
-- **File Saving**: Save extracted/edited text as local `.txt` files.
-- **Error Handling**: User-friendly error messages for authentication, OCR, and file operations.
-- **Modern Java Swing UI**: Login, dashboard, and history screens.
+---
 
-## Architecture
+## Tech Stack
+- **Java Swing** – UI Framework
+- **Firebase** – Authentication & Firestore Database
+- **OCR.space API** – OCR service
+- **JUnit** – Unit testing
 
-- **UserManager**: Handles registration, login, and user history retrieval.
-- **OCRService**: Handles image upload and OCR.space API integration.
-- **HistoryManager**: Manages Firestore interactions for conversion history.
-- **MainAppUI**: All Swing UI screens and actions.
-- **ErrorHandler**: Centralized error display and logging.
+---
 
-## Setup
+## Architecture Overview
+Follows **Clean Architecture** and **SOLID** principles.
 
-1. **Java Version**: Java 11 or higher recommended.
-2. **Dependencies**: Uses OkHttp, Gson, and Firebase Admin SDK (or REST API). See `pom.xml` for Maven dependencies.
-3. **API Keys**:
-   - OCR.space API key: Set in `config.properties` or as an environment variable.
-   - Firebase project credentials: Place your `serviceAccountKey.json` in the project root (if using Admin SDK), or configure REST API keys.
-4. **Build & Run**:
-   - With Maven: `mvn clean install && mvn exec:java -Dexec.mainClass="app.MainAppUI"`
-   - Or use your IDE to run `app.MainAppUI`.
+![Architecture Diagram](screenshots/architecture.png)
 
-## Project Structure
+---
 
-```
-src/
-  app/
-    MainAppUI.java
-    ErrorHandler.java
-  domain/
-    UserManager.java
-    OCRService.java
-    HistoryManager.java
-  util/
-    Config.java
-    FirebaseUtil.java
-```
+## Setup Instructions
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/VisionText.git
+   cd VisionText
+   ```
+2. Install dependencies:
+   - Java 17+
+   - Maven (if using Maven)
+3. Configure Firebase:
+   - Add your `google-services.json` or Firebase config
+4. Configure OCR API key in `config.properties`
+5. Run the app:
+   ```bash
+   mvn exec:java -Dexec.mainClass="com.visiontext.Main"
+   ```
 
-## Configuration
+---
 
-- `config.properties` example:
-  ```
-  ocr.api.key=YOUR_OCR_SPACE_API_KEY
-  firebase.api.key=YOUR_FIREBASE_API_KEY
-  firebase.project.id=YOUR_FIREBASE_PROJECT_ID
-  ```
+## Usage Instructions
+1. **Login**  
+   ![Login Screen](screenshots/login.png)
+2. **Dashboard**  
+   ![Dashboard Screen](screenshots/dashboard.png)
+3. **Upload an Image**  
+   ![Upload Screen](screenshots/upload.png)
+4. **Extract Text**  
+   ![OCR Result Screen](screenshots/ocr_result.png)
+5. **View History**  
+   ![History Screen](screenshots/history.png)
+6. **Settings Menu**  
+   ![Settings Screen](screenshots/settings.png)
+7. **Change Accent Color**  
+   ![Color Picker Screen](screenshots/color_picker.png)
+8. **Dark Mode Login**  
+   ![Dark Mode Login Screen](screenshots/login_dark.png)
 
-## License
+---
 
-MIT 
+## API Documentation
+
+### Firebase Authentication
+- Endpoint: `signInWithEmailAndPassword(email, password)`
+
+### OCR.space API
+- Endpoint: `POST /parse/image`
+- Parameters:
+  - `apikey` – Your API key
+  - `file` – Image file to process
+
+---
+
+## Testing
+- Unit tests for all interactors and services
+- Mocked Firebase & OCR API for offline testing
+- Code coverage: **>80%**  
+![Test Coverage](screenshots/test_coverage.png)
+
+---
+
+## Accessibility Report Summary
+- **Principles Applied:**
+  - Perceptibility – Clear fonts and button labels
+  - Error prevention – Confirmation dialogs before deletion
+- **Target Users:** Students & professionals needing quick OCR
+- **Limitations:** Not optimized for screen readers
+
+---
+
+## Code Quality
+- Followed Java naming conventions
+- Checkstyle applied for formatting
+- Example PR with review comments and fixes  
+![Pull Request Example](screenshots/pr_screenshot.png)
+
+---
+
+## Team Members
+- Krisvir Aujla
+- Harry Wu
+- Habib
+- Jok
