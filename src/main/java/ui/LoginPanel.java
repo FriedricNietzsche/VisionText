@@ -1,6 +1,7 @@
 package ui;
 
 import application.LoginService;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -24,19 +25,18 @@ public class LoginPanel extends JPanel implements ThemeAware {
         this.loginService = loginService;
         this.errorHandler = errorHandler;
         initUI();
-    Theme.addListener(this);
+        Theme.addListener(this);
     }
 
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(Theme.getBackgroundColor());
 
-        // Main container with proper spacing
+        // Main container
         JPanel container = new JPanel(new GridBagLayout());
         container.setOpaque(false);
         container.setBorder(new EmptyBorder(Theme.Spacing.XXL, Theme.Spacing.LG, Theme.Spacing.XXL, Theme.Spacing.LG));
 
-        // Login card
         JPanel loginCard = createLoginCard();
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -46,8 +46,6 @@ public class LoginPanel extends JPanel implements ThemeAware {
         container.add(loginCard, gbc);
 
         add(container, BorderLayout.CENTER);
-
-        // Theme toggle button in top-right corner
         add(createTopBar(), BorderLayout.NORTH);
     }
 
@@ -61,40 +59,36 @@ public class LoginPanel extends JPanel implements ThemeAware {
         themeToggleBtn.setPreferredSize(new Dimension(40, 40));
         themeToggleBtn.addActionListener(e -> toggleTheme());
 
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        rightPanel.setOpaque(false);
-        rightPanel.add(themeToggleBtn);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        right.setOpaque(false);
+        right.add(themeToggleBtn);
 
-        topBar.add(rightPanel, BorderLayout.EAST);
+        topBar.add(right, BorderLayout.EAST);
         return topBar;
     }
 
     private JPanel createLoginCard() {
+        final int CARD_WIDTH = 420;
+
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Theme.getSurfaceColor());
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Theme.getBorderColor(), 1, true),
-            new EmptyBorder(Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL)
+                BorderFactory.createLineBorder(Theme.getBorderColor(), 1, true),
+                new EmptyBorder(Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL, Theme.Spacing.XXL)
         ));
-
-        // Set rounded corners (this will be handled by FlatLaf)
         card.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.LG);
 
-        Dimension cardSize = new Dimension(400, 480);
-        card.setPreferredSize(cardSize);
-        card.setMaximumSize(cardSize);
+        // Let height be computed from content. Constrain width only.
+        card.setMaximumSize(new Dimension(CARD_WIDTH, Integer.MAX_VALUE));
+        card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Header
         card.add(createHeader());
         card.add(Box.createVerticalStrut(Theme.Spacing.XXL));
-
-        // Form
         card.add(createForm());
         card.add(Box.createVerticalStrut(Theme.Spacing.LG));
-
-        // Buttons
         card.add(createButtons());
+        card.add(Box.createVerticalStrut(Theme.Spacing.SM)); // small bottom padding
 
         return card;
     }
@@ -105,7 +99,6 @@ public class LoginPanel extends JPanel implements ThemeAware {
         header.setOpaque(false);
         header.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // App icon
         JLabel iconLabel = new JLabel("👁️");
         iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
         iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -113,7 +106,6 @@ public class LoginPanel extends JPanel implements ThemeAware {
 
         header.add(Box.createVerticalStrut(Theme.Spacing.MD));
 
-        // Title
         JLabel title = new JLabel("VisionText");
         title.setFont(Theme.Fonts.getFont("Inter", Font.BOLD, 28));
         title.setForeground(Theme.getTextColor());
@@ -122,7 +114,6 @@ public class LoginPanel extends JPanel implements ThemeAware {
 
         header.add(Box.createVerticalStrut(Theme.Spacing.SM));
 
-        // Subtitle
         JLabel subtitle = new JLabel("Sign in to extract text from images");
         subtitle.setFont(Theme.Fonts.BODY);
         subtitle.setForeground(Theme.getSecondaryTextColor());
@@ -133,37 +124,48 @@ public class LoginPanel extends JPanel implements ThemeAware {
     }
 
     private JPanel createForm() {
-        JPanel form = new JPanel();
-        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
-        form.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Email field
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = 0;
+        g.gridwidth = 1;
+        g.weightx = 1.0;
+        g.fill = GridBagConstraints.HORIZONTAL;
+
         JLabel emailLabel = new JLabel("Email");
         emailLabel.setFont(Theme.Fonts.BODY_MEDIUM);
         emailLabel.setForeground(Theme.getTextColor());
-        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        g.gridy = 0;
+        g.insets = new Insets(0, 0, Theme.Spacing.SM, 0);
+        g.fill = GridBagConstraints.NONE;
+        g.anchor = GridBagConstraints.WEST;
+        form.add(emailLabel, g);
 
         emailField = createModernTextField("Enter your email");
-        emailField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        g.gridy = 1;
+        g.insets = new Insets(0, 0, Theme.Spacing.MD, 0);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.anchor = GridBagConstraints.CENTER;
+        form.add(emailField, g);
 
-        form.add(emailLabel);
-        form.add(Box.createVerticalStrut(Theme.Spacing.SM));
-        form.add(emailField);
-        form.add(Box.createVerticalStrut(Theme.Spacing.MD));
-
-        // Password field
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setFont(Theme.Fonts.BODY_MEDIUM);
         passwordLabel.setForeground(Theme.getTextColor());
-        passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        g.gridy = 2;
+        g.insets = new Insets(0, 0, Theme.Spacing.SM, 0);
+        g.fill = GridBagConstraints.NONE;
+        g.anchor = GridBagConstraints.WEST;
+        form.add(passwordLabel, g);
 
         passwordField = createModernPasswordField("Enter your password");
-        passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        form.add(passwordLabel);
-        form.add(Box.createVerticalStrut(Theme.Spacing.SM));
-        form.add(passwordField);
+        g.gridy = 3;
+        g.insets = new Insets(0, 0, 0, 0);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.anchor = GridBagConstraints.CENTER;
+        form.add(passwordField, g);
 
         return form;
     }
@@ -172,22 +174,16 @@ public class LoginPanel extends JPanel implements ThemeAware {
         JTextField field = new JTextField();
         field.putClientProperty("JTextField.placeholderText", placeholder);
         field.setFont(Theme.Fonts.BODY);
-        field.setPreferredSize(new Dimension(320, 44));
-        field.setMaximumSize(new Dimension(320, 44));
 
-        // Add focus effects
+        int h = 44;
+        field.setPreferredSize(new Dimension(320, h));                 // initial
+        field.setMinimumSize(new Dimension(200, h));                    // avoid too narrow
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, h));      // full width
+
         field.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", "focus");
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", null);
-            }
+            @Override public void focusGained(FocusEvent e) { field.putClientProperty("JComponent.outline", "focus"); }
+            @Override public void focusLost (FocusEvent e) { field.putClientProperty("JComponent.outline", null); }
         });
-
         return field;
     }
 
@@ -195,22 +191,16 @@ public class LoginPanel extends JPanel implements ThemeAware {
         JPasswordField field = new JPasswordField();
         field.putClientProperty("JTextField.placeholderText", placeholder);
         field.setFont(Theme.Fonts.BODY);
-        field.setPreferredSize(new Dimension(320, 44));
-        field.setMaximumSize(new Dimension(320, 44));
 
-        // Add focus effects
+        int h = 44;
+        field.setPreferredSize(new Dimension(320, h));
+        field.setMinimumSize(new Dimension(200, h));
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, h));
+
         field.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", "focus");
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", null);
-            }
+            @Override public void focusGained(FocusEvent e) { field.putClientProperty("JComponent.outline", "focus"); }
+            @Override public void focusLost (FocusEvent e) { field.putClientProperty("JComponent.outline", null); }
         });
-
         return field;
     }
 
@@ -220,52 +210,42 @@ public class LoginPanel extends JPanel implements ThemeAware {
         buttons.setOpaque(false);
         buttons.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Login button (primary)
         loginBtn = new ModernButton("Sign In", ModernButton.Style.PRIMARY);
         loginBtn.setPreferredSize(new Dimension(320, 44));
-        loginBtn.setMaximumSize(new Dimension(320, 44));
+        loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginBtn.addActionListener(this::onLogin);
 
         buttons.add(loginBtn);
         buttons.add(Box.createVerticalStrut(Theme.Spacing.MD));
 
-        // Register button (secondary)
         registerBtn = new ModernButton("Create Account", ModernButton.Style.SECONDARY);
         registerBtn.setPreferredSize(new Dimension(320, 44));
-        registerBtn.setMaximumSize(new Dimension(320, 44));
+        registerBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         registerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         registerBtn.addActionListener(this::onRegister);
 
         buttons.add(registerBtn);
 
-        // Setup keyboard shortcuts
-        setupKeyboardShortcuts();
+        // Make sure we always have both buttons visible—no clipping
+        buttons.add(Box.createVerticalStrut(Theme.Spacing.SM));
 
+        setupKeyboardShortcuts();
         return buttons;
     }
 
     private void setupKeyboardShortcuts() {
-        // Enter key triggers login
         Action loginAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onLogin(e);
-            }
+            @Override public void actionPerformed(ActionEvent e) { onLogin(e); }
         };
-
         emailField.addActionListener(loginAction);
         passwordField.addActionListener(loginAction);
-
-        // Focus management
         emailField.addActionListener(e -> passwordField.requestFocus());
     }
 
     private void toggleTheme() {
         Theme.toggleTheme();
         themeToggleBtn.setText(Theme.isDarkMode() ? "☀️" : "🌙");
-
-        // Update all components
         SwingUtilities.updateComponentTreeUI(this);
         mainApp.frame.repaint();
     }
@@ -279,18 +259,11 @@ public class LoginPanel extends JPanel implements ThemeAware {
             return;
         }
 
-        // Disable buttons during login
         setButtonsEnabled(false);
 
-        // Simulate async login (you can make this actually async if needed)
-        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
-            @Override
-            protected Boolean doInBackground() throws Exception {
-                return loginService.login(email, password);
-            }
-
-            @Override
-            protected void done() {
+        new SwingWorker<Boolean, Void>() {
+            @Override protected Boolean doInBackground() { return loginService.login(email, password); }
+            @Override protected void done() {
                 try {
                     boolean success = get();
                     if (success) {
@@ -304,8 +277,7 @@ public class LoginPanel extends JPanel implements ThemeAware {
                     setButtonsEnabled(true);
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
 
     private void onRegister(ActionEvent e) {
@@ -317,17 +289,11 @@ public class LoginPanel extends JPanel implements ThemeAware {
             return;
         }
 
-        // Disable buttons during registration
         setButtonsEnabled(false);
 
-        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
-            @Override
-            protected Boolean doInBackground() throws Exception {
-                return loginService.register(email, password);
-            }
-
-            @Override
-            protected void done() {
+        new SwingWorker<Boolean, Void>() {
+            @Override protected Boolean doInBackground() { return loginService.register(email, password); }
+            @Override protected void done() {
                 try {
                     boolean success = get();
                     if (success) {
@@ -341,8 +307,7 @@ public class LoginPanel extends JPanel implements ThemeAware {
                     setButtonsEnabled(true);
                 }
             }
-        };
-        worker.execute();
+        }.execute();
     }
 
     private void setButtonsEnabled(boolean enabled) {
@@ -361,7 +326,9 @@ public class LoginPanel extends JPanel implements ThemeAware {
     }
 
     @Override
-    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
+    public void onThemeChanged(Color previousBackground) {
+        refreshTheme();
+    }
 
     private void updateColors(Component c) {
         if (c instanceof JLabel) {
