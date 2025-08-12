@@ -30,7 +30,7 @@ public class AnimatedButton extends JButton {
         setFont(new Font("Arial", Font.BOLD, 14));
 
         timer = new Timer(16, e -> {
-            float speed = 0.12f;                 // lower = slower, smoother
+            float speed = 0.12f;
             progress += (target - progress) * speed;
             if (Math.abs(target - progress) < 0.01f) progress = target;
             repaint();
@@ -38,9 +38,15 @@ public class AnimatedButton extends JButton {
         timer.setCoalesce(true);
 
         addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { animateTo(1f); }
-            @Override public void mouseExited (MouseEvent e) { animateTo(0f); }
-            @Override public void mousePressed(MouseEvent e) { repaint(); }
+            @Override public void mouseEntered(MouseEvent e) {
+                animateTo(1f);
+            }
+            @Override public void mouseExited (MouseEvent e) {
+                animateTo(0f);
+            }
+            @Override public void mousePressed(MouseEvent e) {
+                repaint();
+            }
             @Override public void mouseReleased(MouseEvent e){ repaint(); }
         });
 
@@ -93,17 +99,17 @@ public class AnimatedButton extends JButton {
 
     private static Color lerp(Color a, Color b, float t) {
         t = Math.max(0f, Math.min(1f, t));
-        int r = (int)(a.getRed()   + (b.getRed()   - a.getRed())   * t);
-        int g = (int)(a.getGreen() + (b.getGreen() - a.getGreen()) * t);
-        int bl= (int)(a.getBlue()  + (b.getBlue()  - a.getBlue())  * t);
-        int al= (int)(a.getAlpha() + (b.getAlpha() - a.getAlpha()) * t);
-        return new Color(r,g,bl,al);
+        int r = (int) (a.getRed()   + (b.getRed() - a.getRed()) * t);
+        int g = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t);
+        int bl = (int) (a.getBlue()  + (b.getBlue() - a.getBlue()) * t);
+        int al = (int) (a.getAlpha() + (b.getAlpha() - a.getAlpha()) * t);
+        return new Color(r, g, bl, al);
     }
     private static Color darken(Color c, float amt) {
         amt = Math.max(0f, Math.min(1f, amt));
-        return new Color((int)(c.getRed()*(1-amt)),
-                (int)(c.getGreen()*(1-amt)),
-                (int)(c.getBlue()*(1-amt)),
+        return new Color((int) (c.getRed() * (1 - amt)),
+                (int) (c.getGreen() * (1 - amt)),
+                (int) (c.getBlue() * (1 - amt)),
                 c.getAlpha());
     }
 }
