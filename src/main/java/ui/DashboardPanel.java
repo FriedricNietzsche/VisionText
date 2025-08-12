@@ -69,11 +69,11 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         JPanel header = createHeader();
         root.add(header, BorderLayout.NORTH);
 
-        // Center: main action cards (centered fixed-width row)
+        // Center: main action cards
         JPanel center = createActionCards();
         root.add(center, BorderLayout.CENTER);
 
-        // Footer: user actions (centered fixed-width row)
+        // Footer: user actions
         JPanel footer = createFooter();
         root.add(footer, BorderLayout.SOUTH);
 
@@ -86,7 +86,7 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(new EmptyBorder(0, 0, Theme.Spacing.XXL, 0));
 
-        // Welcome + subtitle (centered)
+        // Welcome
         String firstName = username.split("@")[0];
         JLabel welcomeLabel = new JLabel("Welcome back, " + firstName + "!");
         welcomeLabel.setFont(Theme.Fonts.getFont("Inter", Font.BOLD, 32));
@@ -132,7 +132,7 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapper.setOpaque(false);
 
-        int gap = Theme.Spacing.XL; // space between the two cards
+        int gap = Theme.Spacing.XL;
         JPanel row = new JPanel(new GridLayout(1, 2, gap, 0));
         row.setOpaque(false);
         row.setPreferredSize(new Dimension(CONTENT_WIDTH, CARD_HEIGHT));
