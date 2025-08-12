@@ -22,8 +22,8 @@ public class DashboardPanel extends JPanel implements ThemeAware {
     private CreateVisionTextPanel createVisionTextPanel;
     private HistoryPanel historyPanel;
 
-    private static final int CONTENT_WIDTH = 1000;   // max width of the centered content rows
-    private static final int CARD_HEIGHT    = 380;   // height of each action card
+    private static final int CONTENT_WIDTH = 1000;
+    private static final int CARD_HEIGHT    = 380;
 
     public DashboardPanel(MainAppUI mainApp,
                           OCRUseCase ocrUseCase,
