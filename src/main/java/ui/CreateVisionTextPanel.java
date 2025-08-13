@@ -372,7 +372,7 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
         SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
             @Override
             protected String doInBackground() throws Exception {
-                return ocrUseCase.runOCR(imageFile);
+                return ocrUseCase.runOcr(imageFile);
             }
 
             @Override
