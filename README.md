@@ -93,7 +93,7 @@ https://github.com/user-attachments/assets/0cd982f9-1f65-4693-82ac-89542aed424e
 - Unit tests for all interactors and services
 - Mocked Firebase & OCR API for offline testing
 - Code coverage: **>80%**  
-![Test Coverage](screenshots/test_coverage.png)
+![Test Coverage](https://github.com/FriedricNietzsche/VisionText/blob/master/TestCoverage.md)
 
 ---
 
