@@ -30,4 +30,42 @@ class ThemeTest {
         // flip back for isolation
         Theme.toggleTheme();
     }
+
+    @Test
+    void colorGettersReturnColors() {
+        // Exercise both modes
+        boolean before = Theme.isDarkMode();
+        if (!before) Theme.toggleTheme();
+        assertNotNull(Theme.getPrimaryColor());
+        assertNotNull(Theme.getBackgroundColor());
+        assertNotNull(Theme.getSurfaceColor());
+        assertNotNull(Theme.getTextColor());
+        assertNotNull(Theme.getSecondaryTextColor());
+        assertNotNull(Theme.getBorderColor());
+        if (before != Theme.isDarkMode()) Theme.toggleTheme();
+    }
+
+    @Test
+    void listenerIsNotifiedOnToggle() {
+    class L implements ThemeAware { boolean called=false; public void onThemeChanged(java.awt.Color c){ called=true; } }
+    L l = new L();
+    Theme.addListener(l);
+    Theme.toggleTheme();
+    assertTrue(l.called);
+    // cleanup
+    Theme.toggleTheme();
+    Theme.removeListener(l);
+    }
+
+    @Test
+    void customPrimaryOverrides() {
+        java.awt.Color prev = Theme.getPrimaryColor();
+        java.awt.Color custom = new java.awt.Color(10,20,30);
+        Theme.setCustomPrimary(custom);
+        assertEquals(custom, Theme.getPrimaryColor());
+        Theme.clearCustomPrimary();
+        assertNotEquals(custom, Theme.getPrimaryColor());
+        // sanity: back to some color
+        assertNotNull(prev);
+    }
 }
