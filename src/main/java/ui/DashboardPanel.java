@@ -99,6 +99,7 @@ public class DashboardPanel extends JPanel implements ThemeAware {
     // Row container to place settings button to the right
     JPanel row = new JPanel(new BorderLayout());
     row.setOpaque(false);
+
     JPanel textCol = new JPanel();
     textCol.setOpaque(false);
     textCol.setLayout(new BoxLayout(textCol, BoxLayout.Y_AXIS));
@@ -114,6 +115,13 @@ public class DashboardPanel extends JPanel implements ThemeAware {
     right.setOpaque(false);
     right.add(settingsBtn);
 
+    // Create a left spacer that mirrors the right panel's preferred size to ensure true centering
+    Dimension rightSize = right.getPreferredSize();
+    JPanel leftSpacer = new JPanel();
+    leftSpacer.setOpaque(false);
+    leftSpacer.setPreferredSize(rightSize);
+
+    row.add(leftSpacer, BorderLayout.WEST);
     row.add(textCol, BorderLayout.CENTER);
     row.add(right, BorderLayout.EAST);
     header.add(row);
