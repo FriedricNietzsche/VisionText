@@ -4,6 +4,10 @@ import java.io.File;
 
 import domain.port.OCRProcessor;
 
+/**
+ * Use case for OCR operations.
+ * @null
+ */
 public class OCRUseCase {
     private final OCRProcessor ocrProcessor;
 
@@ -31,4 +35,3 @@ public class OCRUseCase {
         return extractText(imageFile);
     }
 }
-

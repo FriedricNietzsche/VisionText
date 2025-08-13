@@ -1,13 +1,26 @@
 package ui;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.FileOutputStream;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Window;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.UIManager;
 
+/**
+ * Theme manager for VisionText UI.
+ * @null
+ */
 public final class Theme {
     private Theme() {}
 
@@ -227,6 +240,10 @@ public final class Theme {
         }
     }
 
+    private static final float FADE_STEP = 0.07f;
+    private static final int FADE_TIMER_DELAY = 15;
+    private static final int ALPHA_MAX = 255;
+
     private static void applyFade(Window window, Color previousBg) {
         if (!(window instanceof JFrame)) {
             SwingUtilities.updateComponentTreeUI(window);
@@ -236,10 +253,10 @@ public final class Theme {
         JRootPane root = frame.getRootPane();
         final float[] alpha = {1f};
         final JComponent glass = new JComponent() {
-            @Override protected void paintComponent(Graphics g) {
+            @Override protected void paintComponent(java.awt.Graphics g) {
                 if (alpha[0] <= 0f) return;
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setComposite(AlphaComposite.SrcOver.derive(alpha[0]));
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setComposite(java.awt.AlphaComposite.SrcOver.derive(alpha[0]));
                 g2.setColor(previousBg);
                 g2.fillRect(0,0,getWidth(),getHeight());
                 g2.dispose();
@@ -249,8 +266,8 @@ public final class Theme {
         root.setGlassPane(glass);
         glass.setVisible(true);
         SwingUtilities.updateComponentTreeUI(window);
-        new Timer(15, e -> {
-            alpha[0] -= 0.07f;
+        new Timer(FADE_TIMER_DELAY, e -> {
+            alpha[0] -= FADE_STEP;
             if (alpha[0] <= 0f) {
                 glass.setVisible(false);
                 ((Timer) e.getSource()).stop();

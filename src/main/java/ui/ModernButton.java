@@ -6,6 +6,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/**
+ * A modern styled button for VisionText UI.
+ */
 public class ModernButton extends JButton {
 
     public enum Style {

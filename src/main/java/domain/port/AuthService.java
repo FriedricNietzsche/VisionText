@@ -1,5 +1,9 @@
 package domain.port;
 
+/**
+ * Authentication service port.
+ * @null
+ */
 public interface AuthService {
 
     /**

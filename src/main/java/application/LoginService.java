@@ -2,6 +2,9 @@ package application;
 
 import domain.port.AuthService;
 
+/**
+ * Service for user login, registration, and session management.
+ */
 public final class LoginService {
     private final AuthService authService;
 

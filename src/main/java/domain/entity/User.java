@@ -1,5 +1,9 @@
 package domain.entity;
 
+/**
+ * Represents a user entity.
+ * @null
+ */
 public final class User {
     private final String username;
     private final String userId;

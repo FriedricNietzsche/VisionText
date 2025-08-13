@@ -1,12 +1,24 @@
 package ui;
 
-import application.HistoryService;
-import application.OCRUseCase;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetAdapter;
@@ -17,33 +29,56 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.OverlayLayout;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+
+import org.jetbrains.annotations.NotNull;
+
+import application.HistoryService;
+import application.OCRUseCase;
+
+/**
+ * Panel for creating VisionText entries with OCR and history features.
+ */
 public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
+    public static final String FLAT_LAF_STYLE = "FlatLaf.style";
+    public static final String ARC = "arc: ";
     private final MainAppUI mainApp;
     private final OCRUseCase ocrUseCase;
     private final HistoryService historyService;
-    private final ErrorHandler errorHandler;
     private final String username;
 
     private JLabel statusLabel;
     private ModernImagePreview previewPanel;
     private JTextArea outputArea;
-    private File currentImage;
     private JPanel loadingOverlay;
-    private ModernButton uploadBtn, pasteBtn, copyBtn, clearBtn, saveBtn, backBtn;
+    private ModernButton uploadBtn;
+    private ModernButton pasteBtn;
 
     public CreateVisionTextPanel(MainAppUI mainApp,
                                  OCRUseCase ocrUseCase,
                                  HistoryService historyService,
-                                 ErrorHandler errorHandler,
                                  String username) {
         this.mainApp = mainApp;
         this.ocrUseCase = ocrUseCase;
         this.historyService = historyService;
-        this.errorHandler = errorHandler;
         this.username = username;
         initUI();
-    Theme.addListener(this);
+        Theme.addListener(this);
     }
 
     private void initUI() {
@@ -122,7 +157,7 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
             BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
             new EmptyBorder(Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD, Theme.Spacing.MD)
         ));
-        previewPanel.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.MD);
+        previewPanel.putClientProperty(FLAT_LAF_STYLE, ARC + Theme.Radius.MD);
 
         // Setup drag and drop
         new DropTarget(previewPanel, new DropTargetAdapter() {
@@ -165,7 +200,7 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
             BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
             new EmptyBorder(0, 0, 0, 0)
         ));
-        scrollPane.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.MD);
+        scrollPane.putClientProperty(FLAT_LAF_STYLE, ARC + Theme.Radius.MD);
 
         panel.add(outputLabel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -180,15 +215,6 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
                                       Theme.getSurfaceColor().getBlue(), 200));
         overlay.setVisible(false);
 
-        JPanel loadingCard = new JPanel();
-        loadingCard.setLayout(new BoxLayout(loadingCard, BoxLayout.Y_AXIS));
-        loadingCard.setBackground(Theme.getSurfaceColor());
-        loadingCard.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
-            new EmptyBorder(Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG)
-        ));
-        loadingCard.putClientProperty("FlatLaf.style", "arc: " + Theme.Radius.LG);
-
         JLabel loadingIcon = new JLabel("⏳");
         loadingIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
         loadingIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -198,12 +224,26 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
         loadingText.setForeground(Theme.getTextColor());
         loadingText.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        JPanel loadingCard = getJPanel();
         loadingCard.add(loadingIcon);
         loadingCard.add(Box.createVerticalStrut(Theme.Spacing.SM));
         loadingCard.add(loadingText);
 
         overlay.add(loadingCard);
         return overlay;
+    }
+
+    @NotNull
+    private static JPanel getJPanel() {
+        JPanel loadingCard = new JPanel();
+        loadingCard.setLayout(new BoxLayout(loadingCard, BoxLayout.Y_AXIS));
+        loadingCard.setBackground(Theme.getSurfaceColor());
+        loadingCard.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.getBorderColor(), 1),
+            new EmptyBorder(Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG, Theme.Spacing.LG)
+        ));
+        loadingCard.putClientProperty(FLAT_LAF_STYLE, ARC + Theme.Radius.LG);
+        return loadingCard;
     }
 
     private JPanel createFooter() {
@@ -218,9 +258,9 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
         uploadBtn = new ModernButton("📁 Upload Image", ModernButton.Style.PRIMARY);
         pasteBtn = new ModernButton("📋 Paste", ModernButton.Style.SECONDARY);
-        copyBtn = new ModernButton("📄 Copy Text", ModernButton.Style.SECONDARY);
-        clearBtn = new ModernButton("🗑️ Clear", ModernButton.Style.GHOST);
-        saveBtn = new ModernButton("💾 Save as TXT", ModernButton.Style.SECONDARY);
+        ModernButton copyBtn = new ModernButton("📄 Copy Text", ModernButton.Style.SECONDARY);
+        ModernButton clearBtn = new ModernButton("🗑️ Clear", ModernButton.Style.GHOST);
+        ModernButton saveBtn = new ModernButton("💾 Save as TXT", ModernButton.Style.SECONDARY);
 
         Dimension btnSize = new Dimension(140, 40);
         for (ModernButton btn : new ModernButton[]{uploadBtn, pasteBtn, copyBtn, clearBtn, saveBtn}) {
@@ -229,9 +269,9 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
         // Wire up actions
         uploadBtn.addActionListener(this::onUpload);
-        pasteBtn.addActionListener(e -> pasteFromClipboard());
-        copyBtn.addActionListener(e -> copyToClipboard());
-        clearBtn.addActionListener(e -> clearOutput());
+        pasteBtn.addActionListener(event -> pasteFromClipboard());
+        copyBtn.addActionListener(event -> copyToClipboard());
+        clearBtn.addActionListener(event -> clearOutput());
         saveBtn.addActionListener(this::onSave);
 
         buttonPanel.add(uploadBtn);
@@ -244,7 +284,7 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
         JPanel backPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         backPanel.setOpaque(false);
 
-        backBtn = new ModernButton("← Back to Dashboard", ModernButton.Style.GHOST);
+        ModernButton backBtn = new ModernButton("← Back to Dashboard", ModernButton.Style.GHOST);
         backBtn.addActionListener(e -> mainApp.showDashboard(username));
         backPanel.add(backBtn);
 
@@ -286,8 +326,9 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
                 File file = files.get(0);
                 loadImage(file);
             }
-        } catch (Exception ex) {
-            errorHandler.showError("Failed to drop file: " + ex.getMessage(), ex);
+        }
+        catch (Exception ex) {
+            ErrorHandler.showError("Failed to drop file: " + ex.getMessage(), ex);
         }
     }
 
@@ -302,7 +343,6 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
     }
 
     private void loadImage(File imageFile) {
-        currentImage = imageFile;
         statusLabel.setText("Processing: " + imageFile.getName());
         previewPanel.setImage(imageFile);
         runOCR(imageFile);
@@ -317,19 +357,23 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
                 Image image = (Image) transferable.getTransferData(DataFlavor.imageFlavor);
                 File tempFile = createTempImageFile(image);
                 loadImage(tempFile);
-            } else if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+            }
+            else if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
                 String text = (String) transferable.getTransferData(DataFlavor.stringFlavor);
                 if (outputArea.getText().isEmpty()) {
                     outputArea.setText(text);
-                } else {
+                }
+                else {
                     outputArea.replaceSelection(text);
                 }
                 Toast.show(this, "Text pasted");
-            } else {
+            }
+            else {
                 Toast.show(this, "No image or text found in clipboard");
             }
-        } catch (Exception ex) {
-            errorHandler.showError("Paste failed: " + ex.getMessage(), ex);
+        }
+        catch (Exception ex) {
+            ErrorHandler.showError("Paste failed: " + ex.getMessage(), ex);
         }
     }
 
@@ -348,20 +392,20 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
     private void copyToClipboard() {
         String text = outputArea.getText();
-        if (text == null || text.trim().isEmpty()) {
+        if (text != null && !text.trim().isEmpty()) {
+            Toolkit.getDefaultToolkit().getSystemClipboard()
+                    .setContents(new StringSelection(text), null);
+            Toast.show(this, "Text copied to clipboard");
+        }
+        else {
             Toast.show(this, "No text to copy");
-            return;
         }
 
-        Toolkit.getDefaultToolkit().getSystemClipboard()
-                .setContents(new StringSelection(text), null);
-        Toast.show(this, "Text copied to clipboard");
     }
 
     private void clearOutput() {
         outputArea.setText("");
-        previewPanel.setImage((File) null);
-        currentImage = null;
+        previewPanel.setImage(null);
         statusLabel.setText("Upload an image or paste from clipboard to extract text");
         Toast.show(this, "Cleared");
     }
@@ -369,7 +413,7 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
     private void runOCR(File imageFile) {
         setProcessing(true);
 
-        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() throws Exception {
                 return ocrUseCase.runOcr(imageFile);
@@ -386,12 +430,14 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
                         historyService.addHistory(username, imageFile.getName(), text);
                         statusLabel.setText("✅ Text extracted successfully from " + imageFile.getName());
                         Toast.show(CreateVisionTextPanel.this, "Text extracted and saved to history");
-                    } else {
+                    }
+                    else {
                         statusLabel.setText("⚠️ No text found in " + imageFile.getName());
                     }
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     statusLabel.setText("❌ Failed to process " + imageFile.getName());
-                    errorHandler.showError("Failed to process image: " + ex.getMessage(), ex);
+                    ErrorHandler.showError("Failed to process image: " + ex.getMessage(), ex);
                 }
             }
         };
@@ -405,31 +451,36 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
 
         if (processing) {
             uploadBtn.setText("🔄 Processing...");
-        } else {
+        }
+        else {
             uploadBtn.setText("📁 Upload Image");
         }
     }
 
-    private void onSave(ActionEvent e) {
+    private void onSave(ActionEvent event) {
         String text = outputArea.getText();
-        if (text.trim().isEmpty()) {
-            errorHandler.showError("Nothing to save—text area is empty.");
-            return;
-        }
+        if (!text.trim().isEmpty()) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setSelectedFile(new File("extracted_text.txt"));
 
-        JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new File("extracted_text.txt"));
-
-        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (FileWriter writer = new FileWriter(chooser.getSelectedFile())) {
-                writer.write(text);
-                Toast.show(this, "File saved successfully");
-            } catch (Exception ex) {
-                errorHandler.showError("Failed to save file: " + ex.getMessage(), ex);
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                try (FileWriter writer = new FileWriter(chooser.getSelectedFile())) {
+                    writer.write(text);
+                    Toast.show(this, "File saved successfully");
+                }
+                catch (Exception ex) {
+                    ErrorHandler.showError("Failed to save file: " + ex.getMessage(), ex);
+                }
             }
+        }
+        else {
+            ErrorHandler.showError("Nothing to save—text area is empty.");
         }
     }
 
+    /**
+     * Refresh the theme.
+     */
     public void refreshTheme() {
         setBackground(Theme.getBackgroundColor());
         if (outputArea != null) {
@@ -446,20 +497,24 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
     }
 
     @Override
-    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
+    public void onThemeChanged(Color previousBackground) {
+
+    }
 
     // Custom image preview component
-    private static class ModernImagePreview extends JPanel {
+    private static final class ModernImagePreview extends JPanel {
         private Image image;
 
         public void setImage(File imageFile) {
             if (imageFile != null) {
                 try {
                     this.image = new ImageIcon(imageFile.getAbsolutePath()).getImage();
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     this.image = null;
                 }
-            } else {
+            }
+            else {
                 this.image = null;
             }
             repaint();
@@ -478,7 +533,8 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
             if (image == null) {
                 // Draw drop zone
                 g2.setColor(Theme.getSecondaryTextColor());
-                g2.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0, new float[]{8, 8}, 0));
+                g2.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0,
+                        new float[]{8, 8}, 0));
                 g2.drawRoundRect(10, 10, width - 20, height - 20, Theme.Radius.MD, Theme.Radius.MD);
 
                 // Drop zone text
@@ -493,7 +549,8 @@ public class CreateVisionTextPanel extends JPanel implements ThemeAware {
                     int y = height / 2 - 20 + (i * 25);
                     g2.drawString(lines[i], x, y);
                 }
-            } else {
+            }
+            else {
                 // Draw image scaled to fit
                 int imgWidth = image.getWidth(null);
                 int imgHeight = image.getHeight(null);

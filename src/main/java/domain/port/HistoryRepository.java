@@ -3,6 +3,10 @@ package domain.port;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Repository port for user history operations.
+ * @null
+ */
 public interface HistoryRepository {
 
     /**
