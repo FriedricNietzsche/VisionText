@@ -1,8 +1,8 @@
 package domain.entity;
 
-public class User {
-    private String username;
-    private String userId;
+public final class User {
+    private final String username;
+    private final String userId;
 
     public User(String username, String userId) {
         this.username = username;

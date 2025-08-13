@@ -1,12 +1,15 @@
 package infrastructure;
 
-import domain.port.AuthService;
+import java.io.IOException;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import okhttp3.*;
-
-import java.io.IOException;
+import domain.port.AuthService;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class FirebaseAuthService implements AuthService {
 
@@ -18,45 +21,24 @@ public class FirebaseAuthService implements AuthService {
     private final OkHttpClient httpClient;
     private final Gson gson;
 
-    private String currentUserEmail = null;
+    private String currentUserEmail;
 
     public FirebaseAuthService() {
         this.httpClient = new OkHttpClient();
         this.gson = new Gson();
     }
 
-    // --- Helper classes for JSON serialization/deserialization ---
-
-    // Request body for registration and login
-    private static class AuthRequest {
-        String email;
-        String password;
-
-        public AuthRequest(String email, String password) {
-            this.email = email;
-            this.password = password;
-        }
+    @Override
+    public void logout() {
+        // For client-side Firebase Auth REST API, logout simply means clearing local tokens.
+        // Firebase sessions are primarily managed by the ID token's expiration.
+        this.currentUserEmail = null;
+        System.out.println("User logged out.");
     }
 
-    // Response body for successful registration/login
-    private static class AuthSuccessResponse {
-        @SerializedName("email")
-        String email;
-    }
-
-    // Error response body from Firebase Auth API
-    /* Right now error will just show up in the console instead of being handled in the app. Example console outputs:
-    Registration failed. Status: 400, Error: WEAK_PASSWORD : Password should be at least 6 characters
-    Login failed. Status: 400, Error: INVALID_LOGIN_CREDENTIALS
-    */
-    private static class AuthErrorResponse {
-        Error error;
-
-        static class Error {
-            int code;
-            String message;
-            // Add other fields if needed, like errors list
-        }
+    @Override
+    public String getCurrentUser() {
+        return currentUserEmail;
     }
 
     @Override
@@ -72,22 +54,26 @@ public class FirebaseAuthService implements AuthService {
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            String responseBodyString = response.body() != null ? response.body().string() : "";
+            String responseBodyString = null;
+            if (response.body() != null) {
+                responseBodyString = response.body().string();
+            }
 
             if (response.isSuccessful()) {
                 AuthSuccessResponse authResponse = gson.fromJson(responseBodyString, AuthSuccessResponse.class);
                 this.currentUserEmail = authResponse.email;
                 System.out.println("Registration successful for: " + currentUserEmail);
                 return true;
-            } else {
+            }
+            else {
                 AuthErrorResponse errorResponse = gson.fromJson(responseBodyString, AuthErrorResponse.class);
-                String errorMessage = (errorResponse != null && errorResponse.error != null) ?
-                        errorResponse.error.message : "Unknown error";
+                String errorMessage = errorResponse.error.message;
                 System.err.println("Registration failed. Status: " + response.code() + ", Error: " + errorMessage);
                 return false;
             }
-        } catch (IOException e) {
-            System.err.println("Error during registration: " + e.getMessage());
+        }
+        catch (IOException ex) {
+            System.err.println("Error during registration: " + ex.getMessage());
             return false;
         }
     }
@@ -105,36 +91,65 @@ public class FirebaseAuthService implements AuthService {
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            String responseBodyString = response.body() != null ? response.body().string() : "";
+            String responseBodyString = null;
+            if (response.body() != null) {
+                responseBodyString = response.body().string();
+            }
 
             if (response.isSuccessful()) {
                 AuthSuccessResponse authResponse = gson.fromJson(responseBodyString, AuthSuccessResponse.class);
                 this.currentUserEmail = authResponse.email;
                 System.out.println("Login successful for: " + currentUserEmail);
                 return true;
-            } else {
+            }
+            else {
                 AuthErrorResponse errorResponse = gson.fromJson(responseBodyString, AuthErrorResponse.class);
-                String errorMessage = (errorResponse != null && errorResponse.error != null) ?
-                        errorResponse.error.message : "Unknown error";
+                String errorMessage = errorResponse.error.message;
                 System.err.println("Login failed. Status: " + response.code() + ", Error: " + errorMessage);
                 return false;
             }
-        } catch (IOException e) {
-            System.err.println("Error during login: " + e.getMessage());
+        }
+        catch (IOException ex) {
+            System.err.println("Error during login: " + ex.getMessage());
             return false;
         }
     }
 
-    @Override
-    public void logout() {
-        // For client-side Firebase Auth REST API, logout simply means clearing local tokens.
-        // Firebase sessions are primarily managed by the ID token's expiration.
-        this.currentUserEmail = null;
-        System.out.println("User logged out.");
+    // --- Helper classes for JSON serialization/deserialization ---
+
+    // Request body for registration and login
+    private static class AuthRequest {
+
+        AuthRequest(String email, String password) {
+        }
+
     }
 
-    @Override
-    public String getCurrentUser() {
-        return currentUserEmail;
+    // Response body for successful registration/login
+    private static final class AuthSuccessResponse {
+        @SerializedName("email")
+        private final String email;
+
+        private AuthSuccessResponse(String email) {
+            this.email = email;
+        }
+    }
+
+    // Error response body from Firebase Auth API
+    /* Right now error will just show up in the console instead of being handled in the app. Example console outputs:
+    Registration failed. Status: 400, Error: WEAK_PASSWORD : Password should be at least 6 characters
+    Login failed. Status: 400, Error: INVALID_LOGIN_CREDENTIALS
+    */
+    private static final class AuthErrorResponse {
+        private Error error;
+
+        static class Error {
+            private int code;
+            private final String message;
+
+            Error(String message) {
+                this.message = message;
+            }
+        }
     }
 }
