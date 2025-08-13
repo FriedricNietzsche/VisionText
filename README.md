@@ -100,9 +100,10 @@ https://github.com/user-attachments/assets/0cd982f9-1f65-4693-82ac-89542aed424e
 ## Code Quality
 - Followed Java naming conventions
 - Checkstyle applied for formatting
-- Example PR with review comments and fixes  
-![Pull Request Example](<img width="1869" height="2972" alt="image" src="https://github.com/user-attachments/assets/63d45b49-0e14-496b-ab9f-5d9515ff1c1e" />
-)
+- Example PR with review comments and fixes
+- Pull Request Example:
+(<img width="1869" height="2972" alt="image" src="https://github.com/user-attachments/assets/63d45b49-0e14-496b-ab9f-5d9515ff1c1e" />
+
 
 ---
 
