@@ -40,6 +40,9 @@ Meets rubric:
 ## Evidence
 - HTML: index.html
 - CSV: jacoco.csv
+#Actual image:
+<img width="1083" height="131" alt="image" src="https://github.com/user-attachments/assets/48e6be09-3578-4de8-b970-9fc4bd315a43" />
+
 
 ## What isn’t covered (and why)
 - ui (Swing): Excluded from unit coverage; event-driven and brittle in headless unit tests. Best validated via manual UX checks or dedicated GUI test frameworks (out of scope).
