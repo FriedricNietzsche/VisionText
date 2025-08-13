@@ -1,168 +1,172 @@
 package infrastructure;
 
+import com.google.gson.*;
+import domain.port.HistoryRepository;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import domain.port.HistoryRepository;
-import shared.Config;
-import shared.FirebaseUtil;
+import static shared.Config.getFirebaseRealTmeDBURL;
+import static shared.FirebaseUtil.*;
 
-/**
- * Firebase history repository implementation.
- */
 public class FirebaseHistoryRepository implements HistoryRepository {
-    // Static constants
-    private static final String USERS_PATH = "users/";
-    private static final String FILENAME_KEY = "filename";
-    private static final String CONTENT_KEY = "content";
-    private static final String TIMESTAMP_KEY = "timestamp";
-    private static final String USERNAME_NULL_MSG = "Username cannot be null or empty";
-    private static final String HISTORY_PATH = "/history.json";
-    private static final String HISTORY_ITEM_PATH = "/history/";
-    private static final String HISTORY_ITEM_SUFFIX = ".json";
-    private static final String SEPARATOR = "";
-    private static final String UNKNOWN_FILENAME = "unknown";
-    private static final String EMPTY_RESPONSE_MSG = "Empty response from Firebase";
-    private static final String FAILED_PARSE_MSG = "Failed to parse Firebase response";
-    private static final String FAILED_SAVE_MSG = "Failed to save history: ";
-    private static final String HISTORY_ID_NULL_MSG = "History ID cannot be null or empty";
-
-    // Instance variables
     private final Gson gson;
-    private final String firebaseUrl;
+    private final String FIREBASE_URL = getFirebaseRealTmeDBURL();
 
     public FirebaseHistoryRepository() {
         this.gson = new Gson();
-        this.firebaseUrl = Config.getFirebaseRealTmeDBURL();
     }
 
     private String encodeUsername(String username) {
-        if (username == null) {
-            return null;
-        }
+        if (username == null) return null;
+        // Firebase keys can't contain '.', '#', '$', '[', ']' — you already replace @ and .
+        // Keep your convention for consistency:
         return username.replace("@", "_AT_").replace(".", "_DOT_");
     }
 
-    private String getActualKey(String historyId) {
-        if (historyId != null) {
-            String[] parts = historyId.split(SEPARATOR);
-            if (parts.length > 0) {
-                return parts[0];
-            }
-        }
-        return historyId;
-    }
-
-    private void validateUsername(String username) {
-        if (username == null || username.isEmpty()) {
-            throw new IllegalArgumentException(USERNAME_NULL_MSG);
-        }
-    }
-
     @Override
-    public void saveHistory(String username, String imageFilename, String textContent, long timestamp)
-            throws IOException {
-        validateUsername(username);
+    public void saveHistory(String username, String imageFilename, String textContent, long timestamp) throws IOException {
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        // Allow empty filename (text-only items are valid)
         if (textContent == null) {
             throw new IllegalArgumentException("Text content cannot be null");
         }
+
         String encodedUsername = encodeUsername(username);
-        Map<String, Object> historyItem = new LinkedHashMap<>();
-        historyItem.put(FILENAME_KEY, Objects.requireNonNullElse(imageFilename, ""));
-        historyItem.put(CONTENT_KEY, textContent);
-        historyItem.put(TIMESTAMP_KEY, timestamp);
-        String jsonPayload = gson.toJson(historyItem);
-        String response = FirebaseUtil.post(firebaseUrl + USERS_PATH + encodedUsername + HISTORY_PATH, jsonPayload);
-        if (response.isEmpty()) {
-            throw new IOException(EMPTY_RESPONSE_MSG);
-        }
-        JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
-        if (jsonResponse == null || !jsonResponse.has("name")) {
-            throw new IOException(FAILED_SAVE_MSG + response);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history.json";
+
+        try {
+            Map<String, Object> historyItem = new LinkedHashMap<>();
+            historyItem.put("filename", imageFilename == null ? "" : imageFilename);
+            historyItem.put("content", textContent);
+            historyItem.put("timestamp", timestamp);
+
+            String jsonPayload = gson.toJson(historyItem);
+            String response = post(url, jsonPayload);
+
+            if (response == null || response.isEmpty()) {
+                throw new IOException("Empty response from Firebase");
+            }
+            JsonObject jsonResponse = gson.fromJson(response, JsonObject.class);
+            if (jsonResponse == null || !jsonResponse.has("name")) {
+                throw new IOException("Failed to save history: " + response);
+            }
+        } catch (JsonSyntaxException e) {
+            throw new IOException("Failed to parse Firebase response", e);
+        } catch (Exception e) {
+            throw new IOException("Failed to save history", e);
         }
     }
 
     @Override
     public List<String> getHistoryList(String username) {
-        validateUsername(username);
+        if (username == null || username.isEmpty()) {
+            System.err.println("Username is null or empty, returning empty history list");
+            return new ArrayList<>();
+        }
+
         String encodedUsername = encodeUsername(username);
-        String url = firebaseUrl + USERS_PATH + encodedUsername + HISTORY_PATH;
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history.json";
         List<String> historyList = new ArrayList<>();
-        String jsonResponse;
+
         try {
-            jsonResponse = FirebaseUtil.get(url);
-        }
-        catch (IOException ex) {
-            throw new RuntimeException("Error fetching history: " + ex.getMessage(), ex);
-        }
-        if (jsonResponse.isEmpty() || "null".equals(jsonResponse)) {
-            return historyList;
-        }
-        JsonObject response = gson.fromJson(jsonResponse, JsonObject.class);
-        if (response == null) {
-            throw new RuntimeException(FAILED_PARSE_MSG);
-        }
-        for (Map.Entry<String, JsonElement> entry : response.entrySet()) {
-            String firebaseKey = entry.getKey();
-            JsonObject item = entry.getValue().getAsJsonObject();
-            String filename;
-            if (item.has(FILENAME_KEY)) {
-                filename = item.get(FILENAME_KEY).getAsString();
+            String jsonResponse = shared.FirebaseUtil.get(url);
+
+            if (jsonResponse == null || jsonResponse.isEmpty() || jsonResponse.equals("null")) {
+                // no history yet
+                return historyList;
             }
-            else {
-                filename = UNKNOWN_FILENAME;
+
+            JsonObject response = gson.fromJson(jsonResponse, JsonObject.class);
+            if (response == null) {
+                throw new RuntimeException("Failed to parse Firebase response");
             }
-            long timestamp = 0L;
-            if (item.has(TIMESTAMP_KEY)) {
-                try {
-                    timestamp = item.get(TIMESTAMP_KEY).getAsLong();
+
+            for (Map.Entry<String, JsonElement> entry : response.entrySet()) {
+                String firebaseKey = entry.getKey();
+                JsonObject item = entry.getValue().getAsJsonObject();
+
+                String filename = item.has("filename") ? item.get("filename").getAsString() : "unknown";
+                long timestamp = 0L;
+                if (item.has("timestamp")) {
+                    try { timestamp = item.get("timestamp").getAsLong(); } catch (Exception ignored) {}
                 }
-                catch (NumberFormatException | IllegalStateException ex) {
-                    // ignore
-                }
+
+                // What the user sees in the list
+                String displayString = filename + " (" + timestamp + ")";
+
+                // Return with timestamp in the middle for date-sorting:
+                // format: key|||epochMillis|||display
+                historyList.add(firebaseKey + "|||" + timestamp + "|||" + displayString);
             }
-            String displayString = filename + " (" + timestamp + ")";
-            historyList.add(firebaseKey + SEPARATOR + timestamp + SEPARATOR + displayString);
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching history: " + e.getMessage(), e);
         }
         return historyList;
     }
 
     @Override
     public String getHistoryItem(String username, String historyId) throws IOException {
-        validateUsername(username);
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
         if (historyId == null || historyId.isEmpty()) {
-            throw new IllegalArgumentException(HISTORY_ID_NULL_MSG);
+            throw new IllegalArgumentException("History ID cannot be null or empty");
         }
-        String actualKey = getActualKey(historyId);
+
+        // Extract the actual Firebase key (historyId can be "key|||display" or "key|||epoch|||display")
+        String actualKey = historyId;
+        if (historyId.contains("|||")) {
+            actualKey = historyId.split("\\|\\|\\|")[0];
+        }
+
         String encodedUsername = encodeUsername(username);
-        String url = firebaseUrl + USERS_PATH + encodedUsername + HISTORY_ITEM_PATH + actualKey + HISTORY_ITEM_SUFFIX;
-        String jsonResponse = FirebaseUtil.get(url);
-        if (jsonResponse.isEmpty() || "null".equals(jsonResponse)) {
-            return null;
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
+        try {
+            String jsonResponse = shared.FirebaseUtil.get(url);
+            if (jsonResponse == null || jsonResponse.isEmpty() || "null".equals(jsonResponse)) {
+                return null;
+            }
+            JsonObject item = gson.fromJson(jsonResponse, JsonObject.class);
+            if (item == null || !item.has("content")) {
+                return null;
+            }
+            return item.get("content").getAsString();
+        } catch (JsonSyntaxException e) {
+            throw new IOException("Failed to parse history item JSON", e);
+        } catch (IllegalStateException e) {
+            throw new IOException("Invalid history item data structure", e);
         }
-        JsonObject item = gson.fromJson(jsonResponse, JsonObject.class);
-        if (item == null || !item.has(CONTENT_KEY)) {
-            return null;
-        }
-        return item.get(CONTENT_KEY).getAsString();
     }
 
     @Override
     public void deleteHistory(String username, String historyId) throws IOException {
-        validateUsername(username);
-        if (historyId == null || historyId.isEmpty()) {
-            throw new IllegalArgumentException(HISTORY_ID_NULL_MSG);
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
         }
-        String actualKey = getActualKey(historyId);
+        if (historyId == null || historyId.isEmpty()) {
+            throw new IllegalArgumentException("History ID cannot be null or empty");
+        }
+
+        // Extract firebase key if a composite id was passed
+        String actualKey = historyId;
+        if (historyId.contains("|||")) {
+            actualKey = historyId.split("\\|\\|\\|")[0];
+        }
+
         String encodedUsername = encodeUsername(username);
-        String url = firebaseUrl + USERS_PATH + encodedUsername + HISTORY_ITEM_PATH + actualKey + HISTORY_ITEM_SUFFIX;
-        FirebaseUtil.delete(url);
+        String url = FIREBASE_URL + "users/" + encodedUsername + "/history/" + actualKey + ".json";
+
+        try {
+            // Firebase Realtime DB: DELETE the node
+            delete(url);
+        } catch (Exception e) {
+            throw new IOException("Failed to delete history item", e);
+        }
     }
 }
