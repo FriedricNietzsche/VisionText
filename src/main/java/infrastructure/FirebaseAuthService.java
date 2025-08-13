@@ -119,8 +119,19 @@ public class FirebaseAuthService implements AuthService {
 
     // Request body for registration and login
     private static class AuthRequest {
+        @SerializedName("email")
+        private final String email;
+
+        @SerializedName("password")
+        private final String password;
+
+        // Firebase recommends returnSecureToken=true
+        @SerializedName("returnSecureToken")
+        private final boolean returnSecureToken = true;
 
         AuthRequest(String email, String password) {
+            this.email = email;
+            this.password = password;
         }
 
     }
