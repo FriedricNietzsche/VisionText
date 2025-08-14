@@ -139,25 +139,39 @@ public class MainAppUI {
         frame.repaint();
         lastView = LOG_IN;
     }
+/**
+ * Show the dashboard panel for the given username.
+ * @param username the username of the logged-in user
+ */
+public final void showDashboard(String username) {
+    // Existing API retained for logins (no welcome toast)
+    showDashboard(username, false);
+}
 
-    /**
-     * Show the dashboard panel for the given username.
-     * @param username the username of the logged-in user
-     */
-    public final void showDashboard(String username) {
-        String DASHBOARD = "dashboard";
-        this.username = username;
+/**
+ * Show the dashboard, optionally displaying a welcome toast
+ * (used for newly registered users).
+ */
+public void showDashboard(String username, boolean showWelcomeToast) {
+    final String DASHBOARD = "dashboard";
+    this.username = username;
 
-        if (dashboardPanel != null) {
-            mainPanel.remove(dashboardPanel);
-        }
-        dashboardPanel = new DashboardPanel(this, ocrUseCase, historyService, loginService, username);
-        mainPanel.add(dashboardPanel, DASHBOARD);
-        cardLayout.show(mainPanel, DASHBOARD);
-        frame.setTitle("VisionText - Welcome, " + username.split("@")[0]);
-        lastView = DASHBOARD;
-        refreshTheme();
+    if (dashboardPanel != null) {
+        mainPanel.remove(dashboardPanel);
     }
+
+    dashboardPanel = new DashboardPanel(this, ocrUseCase, historyService, loginService, username);
+    mainPanel.add(dashboardPanel, DASHBOARD);
+    cardLayout.show(mainPanel, DASHBOARD);
+    frame.setTitle("VisionText - Welcome, " + username.split("@")[0]);
+    lastView = DASHBOARD;
+    refreshTheme();
+
+    if (showWelcomeToast && dashboardPanel != null) {
+        SwingUtilities.invokeLater(() -> new WelcomeDialog(frame).setVisible(true));
+    }
+}
+
 
     /**
      * Show the history panel for the given username.
