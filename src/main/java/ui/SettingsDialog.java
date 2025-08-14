@@ -3,10 +3,12 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Settings dialog for theme and animation preferences.
+ */
 public class SettingsDialog extends JDialog implements ThemeAware {
     private final JButton accentBtn;
     private final JCheckBox animationsBox;
-    private final JButton resetAccentBtn;
 
     public SettingsDialog(JFrame owner) {
         super(owner, "Settings", true);
@@ -24,7 +26,7 @@ public class SettingsDialog extends JDialog implements ThemeAware {
         accentBtn = new JButton("Change Accent Color");
         accentBtn.addActionListener(e -> chooseAccent());
 
-        resetAccentBtn = new JButton("Reset Accent Color");
+        JButton resetAccentBtn = new JButton("Reset Accent Color");
         resetAccentBtn.addActionListener(e -> { Theme.clearCustomPrimary(); refreshAccentButton();});
 
         content.add(animationsBox);

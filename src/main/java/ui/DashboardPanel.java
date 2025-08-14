@@ -1,19 +1,42 @@
 package ui;
 
-import application.OCRUseCase;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+
 import application.HistoryService;
 import application.LoginService;
+import application.OCRUseCase;
+import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-
+/**
+ * Dashboard panel for main application navigation and content.
+ */
 public class DashboardPanel extends JPanel implements ThemeAware {
     private final MainAppUI mainApp;
     private final OCRUseCase ocrUseCase;
     private final HistoryService historyService;
     private final LoginService loginService;
-    private final ErrorHandler errorHandler;
     private final String username;
 
     private CardLayout cardLayout;
@@ -26,16 +49,14 @@ public class DashboardPanel extends JPanel implements ThemeAware {
                           OCRUseCase ocrUseCase,
                           HistoryService historyService,
                           LoginService loginService,
-                          ErrorHandler errorHandler,
                           String username) {
         this.mainApp = mainApp;
         this.ocrUseCase = ocrUseCase;
         this.historyService = historyService;
         this.loginService = loginService;
-        this.errorHandler = errorHandler;
         this.username = username;
         initUI();
-    Theme.addListener(this);
+        Theme.addListener(this);
     }
 
     private void initUI() {
@@ -47,8 +68,8 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         topPanel.setOpaque(false);
 
         JPanel mainMenuPanel = createMainMenuPanel();
-        createVisionTextPanel = new CreateVisionTextPanel(mainApp, ocrUseCase, historyService, errorHandler, username);
-        historyPanel = new HistoryPanel(mainApp, historyService, loginService, errorHandler, username);
+        createVisionTextPanel = new CreateVisionTextPanel(mainApp, ocrUseCase, historyService, username);
+        historyPanel = new HistoryPanel(mainApp, historyService, username);
 
         topPanel.add(mainMenuPanel, "mainMenu");
         topPanel.add(createVisionTextPanel, "CreateVisionText");
@@ -96,35 +117,35 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         subtitleLabel.setForeground(Theme.getSecondaryTextColor());
         subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    // Row container to place settings button to the right
-    JPanel row = new JPanel(new BorderLayout());
-    row.setOpaque(false);
+        // Row container to place settings button to the right
+        JPanel row = new JPanel(new BorderLayout());
+        row.setOpaque(false);
 
-    JPanel textCol = new JPanel();
-    textCol.setOpaque(false);
-    textCol.setLayout(new BoxLayout(textCol, BoxLayout.Y_AXIS));
-    textCol.add(welcomeLabel);
-    textCol.add(Box.createVerticalStrut(Theme.Spacing.SM));
-    textCol.add(subtitleLabel);
+        JPanel textCol = new JPanel();
+        textCol.setOpaque(false);
+        textCol.setLayout(new BoxLayout(textCol, BoxLayout.Y_AXIS));
+        textCol.add(welcomeLabel);
+        textCol.add(Box.createVerticalStrut(Theme.Spacing.SM));
+        textCol.add(subtitleLabel);
 
-    // Settings button (gear)
-    ModernButton settingsBtn = new ModernButton("⚙ Settings", ModernButton.Style.GHOST);
-    settingsBtn.setPreferredSize(new Dimension(120, 36));
-    settingsBtn.addActionListener(e -> new SettingsDialog(mainApp.frame).setVisible(true));
-    JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-    right.setOpaque(false);
-    right.add(settingsBtn);
+        // Settings button (gear)
+        ModernButton settingsBtn = new ModernButton("⚙ Settings", ModernButton.Style.GHOST);
+        settingsBtn.setPreferredSize(new Dimension(120, 36));
+        settingsBtn.addActionListener(e -> new SettingsDialog(mainApp.frame).setVisible(true));
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        right.setOpaque(false);
+        right.add(settingsBtn);
 
-    // Create a left spacer that mirrors the right panel's preferred size to ensure true centering
-    Dimension rightSize = right.getPreferredSize();
-    JPanel leftSpacer = new JPanel();
-    leftSpacer.setOpaque(false);
-    leftSpacer.setPreferredSize(rightSize);
+        // Create a left spacer that mirrors the right panel's preferred size to ensure true centering
+        Dimension rightSize = right.getPreferredSize();
+        JPanel leftSpacer = new JPanel();
+        leftSpacer.setOpaque(false);
+        leftSpacer.setPreferredSize(rightSize);
 
-    row.add(leftSpacer, BorderLayout.WEST);
-    row.add(textCol, BorderLayout.CENTER);
-    row.add(right, BorderLayout.EAST);
-    header.add(row);
+        row.add(leftSpacer, BorderLayout.WEST);
+        row.add(textCol, BorderLayout.CENTER);
+        row.add(right, BorderLayout.EAST);
+        header.add(row);
 
         return header;
     }
@@ -155,8 +176,10 @@ public class DashboardPanel extends JPanel implements ThemeAware {
             }
         );
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1.0; gbc.weighty = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         container.add(extractCard, gbc);
 
@@ -195,11 +218,11 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         titleLabel.setForeground(Theme.getTextColor());
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    JLabel descLabel = new JLabel("<html><div style='text-align:center; margin:0 auto;'><p style='margin:0;'>" + description + "</p></div></html>");
-    descLabel.setFont(Theme.Fonts.BODY);
-    descLabel.setForeground(Theme.getSecondaryTextColor());
-    descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-    descLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel descLabel = new JLabel("<html><div style='text-align:center; margin:0 auto;'><p style='margin:0;'>" + description + "</p></div></html>");
+        descLabel.setFont(Theme.Fonts.BODY);
+        descLabel.setForeground(Theme.getSecondaryTextColor());
+        descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        descLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         contentPanel.add(titleLabel);
         contentPanel.add(Box.createVerticalStrut(Theme.Spacing.SM));
@@ -251,15 +274,7 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         footer.setBorder(new EmptyBorder(Theme.Spacing.XXL, 0, 0, 0));
 
         // Theme toggle button
-        ModernButton themeBtn = new ModernButton(Theme.isDarkMode() ? "☀️ Light Mode" : "🌙 Dark Mode", ModernButton.Style.GHOST);
-        themeBtn.addActionListener(e -> {
-            Theme.toggleTheme();
-            themeBtn.setText(Theme.isDarkMode() ? "☀️ Light Mode" : "🌙 Dark Mode");
-            refreshTheme();
-            if (createVisionTextPanel != null) createVisionTextPanel.refreshTheme();
-            if (historyPanel != null) historyPanel.refreshTheme();
-            mainApp.refreshTheme();
-        });
+        ModernButton themeBtn = getModernButton();
 
         // Logout button
         ModernButton logoutBtn = new ModernButton("👋 Sign Out", ModernButton.Style.SECONDARY);
@@ -283,12 +298,26 @@ public class DashboardPanel extends JPanel implements ThemeAware {
         return footer;
     }
 
-    public void showMainMenu() {
-        cardLayout.show(topPanel, "mainMenu");
+    @NotNull
+    private ModernButton getModernButton() {
+        ModernButton themeBtn = new ModernButton(Theme.isDarkMode() ? "☀️ Light Mode" : "🌙 Dark Mode", ModernButton.Style.GHOST);
+        themeBtn.addActionListener(e -> {
+            Theme.toggleTheme();
+            themeBtn.setText(Theme.isDarkMode() ? "☀️ Light Mode" : "🌙 Dark Mode");
+            refreshTheme();
+            if (createVisionTextPanel != null) {
+                createVisionTextPanel.refreshTheme();
+            }
+            if (historyPanel != null) {
+                historyPanel.refreshTheme();
+            }
+            mainApp.refreshTheme();
+        });
+        return themeBtn;
     }
 
-    // Update dynamic colors after theme toggle
-    public void refreshTheme() {
+    /** Refresh the theme of the dashboard and all its components. */
+    public final void refreshTheme() {
         setBackground(Theme.getBackgroundColor());
         for (Component c : getComponents()) {
             refreshComponentTree(c);
@@ -298,14 +327,17 @@ public class DashboardPanel extends JPanel implements ThemeAware {
     }
 
     @Override
-    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
+    public void onThemeChanged(Color previousBackground) {
+        refreshTheme();
+    }
 
     private void refreshComponentTree(Component comp) {
         if (comp instanceof JPanel) {
             JPanel p = (JPanel) comp;
             if (!p.isOpaque()) {
                 // keep transparent to let parent show through
-            } else {
+            }
+            else {
                 p.setBackground(Theme.getBackgroundColor());
             }
         }

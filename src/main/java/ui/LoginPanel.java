@@ -1,17 +1,41 @@
 package ui;
 
-import application.LoginService;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+
+import application.LoginService;
+
+/**
+ * Login panel for user authentication.
+ */
 public class LoginPanel extends JPanel implements ThemeAware {
+    public static final String JCOMPONENT_OUTLINE = "JComponent.outline";
     private final MainAppUI mainApp;
     private final LoginService loginService;
-    private final ErrorHandler errorHandler;
 
     private JTextField emailField;
     private JPasswordField passwordField;
@@ -19,12 +43,11 @@ public class LoginPanel extends JPanel implements ThemeAware {
     private JButton registerBtn;
     private JButton themeToggleBtn;
 
-    public LoginPanel(MainAppUI mainApp, LoginService loginService, ErrorHandler errorHandler) {
+    public LoginPanel(MainAppUI mainApp, LoginService loginService) {
         this.mainApp = mainApp;
         this.loginService = loginService;
-        this.errorHandler = errorHandler;
         initUI();
-    Theme.addListener(this);
+        Theme.addListener(this);
     }
 
     private void initUI() {
@@ -144,7 +167,7 @@ public class LoginPanel extends JPanel implements ThemeAware {
         emailLabel.setForeground(Theme.getTextColor());
         emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        emailField = createModernTextField("Enter your email");
+        emailField = createModernTextField();
         emailField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         form.add(emailLabel);
@@ -158,7 +181,7 @@ public class LoginPanel extends JPanel implements ThemeAware {
         passwordLabel.setForeground(Theme.getTextColor());
         passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        passwordField = createModernPasswordField("Enter your password");
+        passwordField = createModernPasswordField();
         passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         form.add(passwordLabel);
@@ -168,9 +191,9 @@ public class LoginPanel extends JPanel implements ThemeAware {
         return form;
     }
 
-    private JTextField createModernTextField(String placeholder) {
+    private JTextField createModernTextField() {
         JTextField field = new JTextField();
-        field.putClientProperty("JTextField.placeholderText", placeholder);
+        field.putClientProperty("JTextField.placeholderText", "Enter your email");
         field.setFont(Theme.Fonts.BODY);
         field.setPreferredSize(new Dimension(320, 44));
         field.setMaximumSize(new Dimension(320, 44));
@@ -179,21 +202,21 @@ public class LoginPanel extends JPanel implements ThemeAware {
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", "focus");
+                field.putClientProperty(JCOMPONENT_OUTLINE, "focus");
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", null);
+                field.putClientProperty(JCOMPONENT_OUTLINE, null);
             }
         });
 
         return field;
     }
 
-    private JPasswordField createModernPasswordField(String placeholder) {
+    private JPasswordField createModernPasswordField() {
         JPasswordField field = new JPasswordField();
-        field.putClientProperty("JTextField.placeholderText", placeholder);
+        field.putClientProperty("JTextField.placeholderText", "Enter your password");
         field.setFont(Theme.Fonts.BODY);
         field.setPreferredSize(new Dimension(320, 44));
         field.setMaximumSize(new Dimension(320, 44));
@@ -202,12 +225,12 @@ public class LoginPanel extends JPanel implements ThemeAware {
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", "focus");
+                field.putClientProperty(JCOMPONENT_OUTLINE, "focus");
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                field.putClientProperty("JComponent.outline", null);
+                field.putClientProperty(JCOMPONENT_OUTLINE, null);
             }
         });
 
@@ -275,7 +298,7 @@ public class LoginPanel extends JPanel implements ThemeAware {
         String password = new String(passwordField.getPassword());
 
         if (email.isEmpty() || password.isEmpty()) {
-            errorHandler.showError("Please enter both email and password.");
+            ErrorHandler.showError("Please enter both email and password.");
             return;
         }
 
@@ -283,9 +306,9 @@ public class LoginPanel extends JPanel implements ThemeAware {
         setButtonsEnabled(false);
 
         // Simulate async login (you can make this actually async if needed)
-        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
-            protected Boolean doInBackground() throws Exception {
+            protected Boolean doInBackground() {
                 return loginService.login(email, password);
             }
 
@@ -295,12 +318,15 @@ public class LoginPanel extends JPanel implements ThemeAware {
                     boolean success = get();
                     if (success) {
                         mainApp.showDashboard(email);
-                    } else {
-                        errorHandler.showError("Login failed. Please check your credentials.");
                     }
-                } catch (Exception ex) {
-                    errorHandler.showError("Login error: " + ex.getMessage());
-                } finally {
+                    else {
+                        ErrorHandler.showError("Login failed. Please check your credentials.");
+                    }
+                }
+                catch (Exception ex) {
+                    ErrorHandler.showError("Login error: " + ex.getMessage());
+                }
+                finally {
                     setButtonsEnabled(true);
                 }
             }
@@ -313,16 +339,16 @@ public class LoginPanel extends JPanel implements ThemeAware {
         String password = new String(passwordField.getPassword());
 
         if (email.isEmpty() || password.isEmpty()) {
-            errorHandler.showError("Please enter both email and password.");
+            ErrorHandler.showError("Please enter both email and password.");
             return;
         }
 
         // Disable buttons during registration
         setButtonsEnabled(false);
 
-        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
-            protected Boolean doInBackground() throws Exception {
+            protected Boolean doInBackground() {
                 return loginService.register(email, password);
             }
 
@@ -331,14 +357,16 @@ public class LoginPanel extends JPanel implements ThemeAware {
                 try {
                     boolean success = get();
                     if (success) {
-                        // Successful registration -> show dashboard with welcome toast
+                        // Successful registration -> show dashboard with welcome dialog
                         mainApp.showDashboard(email, true);
                     } else {
-                        errorHandler.showError("Registration failed. Email may already be in use or password is too weak.");
+                        ErrorHandler.showError("Registration failed. Email may already be in use or password is too weak.");
                     }
-                } catch (Exception ex) {
-                    errorHandler.showError("Registration error: " + ex.getMessage());
-                } finally {
+                }
+                catch (Exception ex) {
+                    ErrorHandler.showError("Registration error: " + ex.getMessage());
+                }
+                finally {
                     setButtonsEnabled(true);
                 }
             }
@@ -353,6 +381,9 @@ public class LoginPanel extends JPanel implements ThemeAware {
         registerBtn.setText(enabled ? "Create Account" : "Creating...");
     }
 
+    /**
+     * Refresh the theme colors and update all components.
+     */
     public void refreshTheme() {
         setBackground(Theme.getBackgroundColor());
         SwingUtilities.invokeLater(() -> {
@@ -362,18 +393,24 @@ public class LoginPanel extends JPanel implements ThemeAware {
     }
 
     @Override
-    public void onThemeChanged(Color previousBackground) { refreshTheme(); }
+    public void onThemeChanged(Color previousBackground) {
+        refreshTheme();
+    }
 
     private void updateColors(Component c) {
         if (c instanceof JLabel) {
-            ((JLabel) c).setForeground(Theme.getTextColor());
+            c.setForeground(Theme.getTextColor());
         }
         if (c instanceof JPanel) {
             JPanel p = (JPanel) c;
-            if (p.isOpaque()) p.setBackground(Theme.getBackgroundColor());
+            if (p.isOpaque()) {
+                p.setBackground(Theme.getBackgroundColor());
+            }
         }
         if (c instanceof Container) {
-            for (Component child : ((Container) c).getComponents()) updateColors(child);
+            for (Component child : ((Container) c).getComponents()) {
+                updateColors(child);
+            }
         }
     }
 }

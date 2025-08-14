@@ -2,6 +2,10 @@ package domain.port;
 
 import java.io.File;
 
+/**
+ * OCR processor port.
+ * @null
+ */
 public interface OCRProcessor {
 
     /**

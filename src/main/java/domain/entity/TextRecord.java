@@ -1,5 +1,9 @@
 package domain.entity;
 
+/**
+ * Represents a text record entity.
+ * @null
+ */
 public final class TextRecord {
     private final String id;
     private final String imageFilename;

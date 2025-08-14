@@ -5,6 +5,9 @@ import java.util.List;
 
 import domain.port.HistoryRepository;
 
+/**
+ * Service for managing user history.
+ */
 public final class HistoryService {
     private final HistoryRepository historyRepository;
 
@@ -61,6 +64,7 @@ public final class HistoryService {
      * Getter for the user history.
      * @param username the user
      * @return list of historyId Strings
+     * @throws RuntimeException error
      */
     public List<String> getHistoryList(String username) {
         return historyRepository.getHistoryList(username);
