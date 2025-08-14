@@ -57,7 +57,7 @@ https://github.com/user-attachments/assets/0cd982f9-1f65-4693-82ac-89542aed424e
 1. **Login**  
    <img width="1182" height="792" alt="ebacfb74-4086-48a7-91dc-9e4dbe9f7c2e" src="https://github.com/user-attachments/assets/7dbb82ef-c70b-49cb-a123-b3b20b87a111" />
 2. **Dashboard**  
-   <img width="1179" height="792" alt="6026e807-d863-4467-82bf-7fd20de74148" src="https://github.com/user-attachments/assets/c039f48c-9c4a-4b37-8cdd-81d2656bc36c" />
+   <img width="1180" height="781" alt="image" src="https://github.com/user-attachments/assets/78c81d7b-706d-4fba-be30-2c91c4761165" />
 3. **Upload an Image**  
    <img width="1181" height="790" alt="aa80808f-1fc5-4d60-9cc2-86969baf26bc" src="https://github.com/user-attachments/assets/2c481667-0dc4-49cc-94c7-490e611325d7" />
 4. **Extract Text**  
