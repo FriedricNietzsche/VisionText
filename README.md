@@ -52,7 +52,8 @@ Follows **Clean Architecture** and **SOLID** principles.
 ## Usage Instructions
 
 **Video Demo**
-https://github.com/user-attachments/assets/0cd982f9-1f65-4693-82ac-89542aed424e
+https://github.com/user-attachments/assets/4cf54bdf-2021-4382-8d1e-d1de9f826a25
+
 
 1. **Login**  
    <img width="1182" height="792" alt="ebacfb74-4086-48a7-91dc-9e4dbe9f7c2e" src="https://github.com/user-attachments/assets/7dbb82ef-c70b-49cb-a123-b3b20b87a111" />
