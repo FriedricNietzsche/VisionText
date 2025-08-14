@@ -115,7 +115,13 @@ public class MainAppUI {
     lastView = LOG_IN;
     }
 
+    // Existing API retained for logins (no welcome toast)
     public void showDashboard(String username) {
+        showDashboard(username, false);
+    }
+
+    // New method allowing a welcome toast for newly registered users
+    public void showDashboard(String username, boolean showWelcomeToast) {
         String DASHBOARD = "dashboard";
         this.username = username;
 
@@ -126,8 +132,12 @@ public class MainAppUI {
         mainPanel.add(dashboardPanel, DASHBOARD);
         cardLayout.show(mainPanel, DASHBOARD);
         frame.setTitle("VisionText - Welcome, " + username.split("@")[0]);
-    lastView = DASHBOARD;
-    refreshTheme();
+        lastView = DASHBOARD;
+        refreshTheme();
+
+            if (showWelcomeToast && dashboardPanel != null) {
+                SwingUtilities.invokeLater(() -> new WelcomeDialog(frame).setVisible(true));
+        }
     }
 
     public void showHistory(String username) {
