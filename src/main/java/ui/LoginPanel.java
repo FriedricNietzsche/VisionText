@@ -331,7 +331,8 @@ public class LoginPanel extends JPanel implements ThemeAware {
                 try {
                     boolean success = get();
                     if (success) {
-                        mainApp.showDashboard(email);
+                        // Successful registration -> show dashboard with welcome toast
+                        mainApp.showDashboard(email, true);
                     } else {
                         errorHandler.showError("Registration failed. Email may already be in use or password is too weak.");
                     }
